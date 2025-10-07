@@ -1,0 +1,36 @@
+{
+  "name": "marketing-saas-platform",
+  "version": "1.0.0",
+  "description": "Multi-industry marketing SaaS platform with AI-powered content generation",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd content-engine/backend && npm run dev",
+    "dev:frontend": "cd content-engine/frontend && npm start",
+    "build": "cd content-engine/frontend && npm run build",
+    "test": "npm run test:backend && npm run test:frontend",
+    "test:backend": "cd content-engine/backend && npm test",
+    "test:frontend": "cd content-engine/frontend && npm test",
+    "setup": "npm run setup:backend && npm run setup:frontend",
+    "setup:backend": "cd content-engine/backend && npm install",
+    "setup:frontend": "cd content-engine/frontend && npm install"
+  },
+  "keywords": [
+    "marketing",
+    "saas",
+    "ai",
+    "content-generation",
+    "wordpress",
+    "multisite"
+  ],
+  "author": "Your Agency",
+  "license": "UNLICENSED",
+  "private": true,
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "workspaces": [
+    "content-engine/backend",
+    "content-engine/frontend"
+  ]
+}
