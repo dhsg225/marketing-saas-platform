@@ -44,7 +44,7 @@ Create `.env` file in the backend directory:
 
 ```env
 # Server Configuration
-PORT=3001
+PORT=5001
 NODE_ENV=development
 
 # Database Configuration
@@ -156,12 +156,14 @@ CREATE TABLE content_templates (
 cd content-engine/backend
 npm run dev
 ```
+Backend will run on: http://localhost:5001
 
 ### 2. Start Frontend Development Server
 ```bash
 cd content-engine/frontend
 npm start
 ```
+Frontend will run on: http://localhost:3000
 
 ### 3. Database Migrations
 ```bash
