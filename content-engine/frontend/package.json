@@ -7,7 +7,8 @@
     "start": "PORT=5002 react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "vercel-build": "react-scripts build"
   },
   "keywords": [],
   "author": "",
@@ -38,7 +39,8 @@
   },
   "devDependencies": {
     "eslint-plugin-react-hooks": "^7.0.0",
-    "http-proxy-middleware": "^3.0.5"
+    "http-proxy-middleware": "^3.0.5",
+    "vercel": "^48.4.1"
   },
   "proxy": "http://localhost:5001"
 }
