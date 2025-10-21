@@ -169,7 +169,18 @@ export class RedisQueueService {
     error?: string;
   } | null> {
     const jobData = await redis.hgetall(`job:${jobId}`);
-    return jobData || null;
+    if (!jobData || Object.keys(jobData).length === 0) {
+      return null;
+    }
+    
+    return {
+      status: jobData.status as string || 'unknown',
+      createdAt: jobData.createdAt as string,
+      startedAt: jobData.startedAt as string,
+      completedAt: jobData.completedAt as string,
+      failedAt: jobData.failedAt as string,
+      error: jobData.error as string
+    };
   }
 
   /**
