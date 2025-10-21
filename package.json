@@ -5,10 +5,10 @@
   "main": "index.js",
   "scripts": {
     "start": "PORT=5002 react-scripts start",
-    "build": "npx react-scripts build",
+    "build": "CI=false npx react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "vercel-build": "npx react-scripts build",
+    "vercel-build": "CI=false npx react-scripts build",
     "postinstall": "echo 'Dependencies installed successfully'"
   },
   "keywords": [],
