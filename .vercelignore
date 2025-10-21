@@ -1,5 +1,0 @@
-# Ignore legacy directories during build
-content-engine/backend/
-content-engine/frontend/
-.DS_Store
-
