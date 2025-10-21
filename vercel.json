@@ -1,5 +1,5 @@
 {
   "version": 2,
-  "outputDirectory": "build",
-  "framework": "create-react-app"
+  "buildCommand": "./node_modules/.bin/react-scripts build",
+  "outputDirectory": "build"
 }
