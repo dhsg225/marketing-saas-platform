@@ -1,0 +1,5 @@
+# Ignore backend and frontend subdirectories during build
+content-engine/
+node_modules/
+.DS_Store
+
