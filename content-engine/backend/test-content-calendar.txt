@@ -1,0 +1,36 @@
+Content Calendar - Bangkok Bistro
+
+Date: October 20, 2025
+Platform: Instagram
+Content Type: Feed Post
+Title: New Menu Launch
+Description: Introducing our signature Thai dishes with fresh ingredients
+Hashtags: #ThaiFood #NewMenu #BangkokBistro
+
+Date: October 21, 2025
+Platform: Facebook
+Content Type: Carousel
+Title: Chef Spotlight
+Description: Meet our head chef and learn about traditional cooking techniques
+Hashtags: #ChefSpotlight #ThaiCuisine #BehindTheScenes
+
+Date: October 22, 2025
+Platform: TikTok
+Content Type: Video
+Title: Quick Recipe
+Description: 30-second tutorial for making perfect pad thai at home
+Hashtags: #QuickRecipe #PadThai #CookingTips
+
+Date: October 23, 2025
+Platform: Instagram
+Content Type: Story
+Title: Daily Special
+Description: Today's special: Green Curry with jasmine rice
+Hashtags: #DailySpecial #GreenCurry #Lunch
+
+Date: October 24, 2025
+Platform: Facebook
+Content Type: Post
+Title: Weekend Events
+Description: Join us for live music and traditional Thai dance performances
+Hashtags: #WeekendEvents #LiveMusic #ThaiCulture

@@ -173,3 +173,5 @@ config/production.js
 # Local development
 local/
 dev/
+*.env*
+.env.backup
