@@ -66,14 +66,14 @@ export class RedisQueueService {
    */
   async getNextJob(): Promise<AIJob | null> {
     try {
-      // Use blocking pop to wait for jobs
-      const result = await redis.brpop(this.QUEUE_NAME, 10); // Wait up to 10 seconds
+      // Use rpop to get next job (non-blocking)
+      const result = await redis.rpop(this.QUEUE_NAME);
       
-      if (!result || !result[1]) {
+      if (!result) {
         return null;
       }
 
-      const job: AIJob = JSON.parse(result[1]);
+      const job: AIJob = JSON.parse(result);
       
       // Move to processing queue
       await redis.lpush(this.PROCESSING_QUEUE, JSON.stringify(job));
