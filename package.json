@@ -13,7 +13,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
+  "description": "Marketing SaaS Platform Frontend",
   "dependencies": {
     "@heroicons/react": "^2.2.0",
     "@types/node": "^24.7.0",
