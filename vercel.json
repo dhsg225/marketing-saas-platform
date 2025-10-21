@@ -1,5 +1,5 @@
 {
   "version": 2,
-  "buildCommand": "./node_modules/.bin/react-scripts build",
+  "buildCommand": "npx react-scripts build",
   "outputDirectory": "build"
 }
