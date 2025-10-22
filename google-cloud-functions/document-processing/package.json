@@ -1,0 +1,12 @@
+{
+  "name": "document-processing",
+  "version": "1.0.0",
+  "description": "Google Cloud Function for document processing",
+  "main": "index.js",
+  "dependencies": {
+    "redis": "^4.6.0"
+  },
+  "engines": {
+    "node": "18"
+  }
+}
