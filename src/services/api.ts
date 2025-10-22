@@ -1,41 +1,24 @@
-// Centralized API service - HYBRID APPROACH!
-// Vercel functions for core operations, Google Cloud for heavy processing
+// Centralized API service - GOOGLE CLOUD FUNCTIONS APPROACH!
+// All backend operations now use Google Cloud Functions
 
-const getApiBaseUrl = () => {
-  // Priority order:
-  // 1. Environment variable (set in Vercel, .env files, etc.)
-  // 2. Current domain + /api (for production)
-  // 3. Localhost fallback (development only)
-  
-  if (process.env.REACT_APP_API_URL) {
-    return process.env.REACT_APP_API_URL;
-  }
-  
-  // Auto-detect production domain
-  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
-    return `${window.location.protocol}//${window.location.hostname}/api`;
-  }
-  
-  // Development fallback
-  return 'http://localhost:5001/api';
-};
+// Google Cloud Functions base URL
+const GOOGLE_CLOUD_BASE_URL = 'https://us-central1-marketing-saas-ai.cloudfunctions.net';
 
 // Google Cloud Functions URLs
 const getGoogleCloudUrl = (functionName: string) => {
-  return `https://us-central1-marketing-saas-ai.cloudfunctions.net/${functionName}`;
+  return `${GOOGLE_CLOUD_BASE_URL}/${functionName}`;
 };
 
 export const api = {
   get baseURL() {
-    return getApiBaseUrl();
+    return GOOGLE_CLOUD_BASE_URL;
   },
   
-  // Helper function to get full URL for Vercel functions
+  // Helper function to get full URL for Google Cloud Functions
   getUrl: (endpoint: string) => {
-    const baseUrl = getApiBaseUrl();
     // Remove leading slash if present
     const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
-    return `${baseUrl}/${cleanEndpoint}`;
+    return getGoogleCloudUrl(cleanEndpoint);
   },
   
   // Google Cloud Functions URLs
@@ -44,6 +27,7 @@ export const api = {
   },
   
   // Specific Google Cloud Functions
+  auth: () => getGoogleCloudUrl('auth'),
   aiContentGeneration: () => getGoogleCloudUrl('ai-content-generation'),
   documentProcessing: () => getGoogleCloudUrl('document-processing'),
   
