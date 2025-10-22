@@ -175,3 +175,7 @@ dev/
 *.env*
 .env.backup
 .vercel
+
+# Google Cloud SDK
+google-cloud-sdk/
+y/
