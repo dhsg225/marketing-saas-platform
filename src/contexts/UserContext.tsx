@@ -108,7 +108,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
 
   const verifyToken = async (tokenToVerify: string) => {
     try {
-      const response = await fetch(api.getUrl('auth/verify'), {
+      const response = await fetch(api.getUrl('auth'), {
         headers: api.getHeaders(tokenToVerify),
       });
 
@@ -203,7 +203,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      const response = await fetch(api.getUrl('auth/login'), {
+      const response = await fetch(api.getUrl('auth'), {
         method: 'POST',
         headers: api.getHeaders(),
         body: JSON.stringify({ email, password }),

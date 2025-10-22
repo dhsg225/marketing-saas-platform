@@ -125,7 +125,7 @@ const Settings: React.FC = () => {
       setProfileLoading(true);
       console.log('Starting profile load...');
       
-      const response = await fetch(api.getUrl('auth/verify'), {
+      const response = await fetch(api.getUrl('auth'), {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'

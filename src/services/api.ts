@@ -13,10 +13,6 @@ const getApiBaseUrl = () => {
   
   // Auto-detect production domain
   if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
-    // TEMPORARY FIX: Use working Vercel deployment until cognito.guru domain is properly configured
-    if (window.location.hostname === 'cognito.guru') {
-      return 'https://marketing-saas-platform-1sa8nxfau-shannons-projects-3f909922.vercel.app/api';
-    }
     return `${window.location.protocol}//${window.location.hostname}/api`;
   }
   
