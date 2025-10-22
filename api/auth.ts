@@ -16,12 +16,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   setCorsHeaders(res);
 
   const { action } = req.query;
+  const pathSegments = req.url?.split('/').filter(Boolean) || [];
 
-  // POST /api/auth?action=login - Login
-  // GET /api/auth?action=verify - Verify token
-  // Default: POST = login, GET = verify
-
-  if (req.method === 'POST' || action === 'login') {
+  // Route based on URL path or action parameter
+  if (pathSegments.includes('organizations')) {
+    return handleOrganizations(req, res);
+  } else if (pathSegments.includes('register')) {
+    return handleRegister(req, res);
+  } else if (pathSegments.includes('forgot-password')) {
+    return handleForgotPassword(req, res);
+  } else if (req.method === 'POST' || action === 'login') {
     return handleLogin(req, res);
   } else if (req.method === 'GET' || action === 'verify') {
     return handleVerify(req, res);
@@ -100,6 +104,79 @@ async function handleVerify(req: NextApiRequest, res: NextApiResponse) {
   } catch (error) {
     console.error('❌ Token verification error:', error);
     res.status(401).json({ error: 'Invalid token' });
+  }
+}
+
+async function handleOrganizations(req: NextApiRequest, res: NextApiResponse) {
+  try {
+    // Mock organizations data for now
+    const organizations = [
+      {
+        id: 'org-1',
+        name: 'Demo Organization',
+        role: 'admin',
+        createdAt: new Date().toISOString()
+      }
+    ];
+
+    res.json({
+      success: true,
+      data: organizations
+    });
+
+  } catch (error) {
+    console.error('❌ Organizations error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+async function handleRegister(req: NextApiRequest, res: NextApiResponse) {
+  try {
+    const { email, password, name } = req.body;
+
+    if (!email || !password || !name) {
+      return res.status(400).json({ error: 'Email, password, and name are required' });
+    }
+
+    // Mock user registration for now
+    const user = {
+      id: `user-${Date.now()}`,
+      email: email,
+      name: name,
+      createdAt: new Date().toISOString()
+    };
+
+    res.json({
+      success: true,
+      data: {
+        user,
+        message: 'User registered successfully'
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Registration error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+async function handleForgotPassword(req: NextApiRequest, res: NextApiResponse) {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' });
+    }
+
+    // Mock password reset for now
+    res.json({
+      success: true,
+      message: 'Password reset email sent successfully'
+    });
+
+  } catch (error) {
+    console.error('❌ Forgot password error:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
