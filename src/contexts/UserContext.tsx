@@ -84,22 +84,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Dynamic API URL - works with any domain
-  const getApiBaseUrl = () => {
-    if (process.env.REACT_APP_API_URL) {
-      return process.env.REACT_APP_API_URL;
-    }
-    
-    // Auto-detect production domain
-    if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
-      return `${window.location.protocol}//${window.location.hostname}/api`;
-    }
-    
-    // Development fallback
-    return 'http://localhost:5001/api';
-  };
-  
-  const API_BASE_URL = getApiBaseUrl();
+  // Using centralized API service for consistent URL handling
 
   // Check for existing token on mount
   useEffect(() => {
@@ -123,10 +108,8 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
 
   const verifyToken = async (tokenToVerify: string) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/verify`, {
-        headers: {
-          'Authorization': `Bearer ${tokenToVerify}`,
-        },
+      const response = await fetch(api.getUrl('auth/verify'), {
+        headers: api.getHeaders(tokenToVerify),
       });
 
       if (response.ok) {
@@ -153,10 +136,8 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
 
   const loadUserOrganizations = async (tokenToUse: string) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/organizations`, {
-        headers: {
-          'Authorization': `Bearer ${tokenToUse}`,
-        },
+      const response = await fetch(api.getUrl('auth/organizations'), {
+        headers: api.getHeaders(tokenToUse),
       });
 
       if (response.ok) {
@@ -175,10 +156,8 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
 
   const loadClients = async (organizationId: string, tokenToUse: string) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/clients/clients/${organizationId}`, {
-        headers: {
-          'Authorization': `Bearer ${tokenToUse}`,
-        },
+      const response = await fetch(api.getUrl(`clients/clients/${organizationId}`), {
+        headers: api.getHeaders(tokenToUse),
       });
 
       if (response.ok) {
@@ -197,10 +176,8 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
 
   const loadProjects = async (clientId: string, tokenToUse: string) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/clients/projects/client/${clientId}`, {
-        headers: {
-          'Authorization': `Bearer ${tokenToUse}`,
-        },
+      const response = await fetch(api.getUrl(`clients/projects/client/${clientId}`), {
+        headers: api.getHeaders(tokenToUse),
       });
 
       if (response.ok) {
@@ -226,11 +203,9 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/login`, {
+      const response = await fetch(api.getUrl('auth/login'), {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: api.getHeaders(),
         body: JSON.stringify({ email, password }),
       });
 
@@ -258,11 +233,9 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
 
   const register = async (email: string, password: string, name: string, industry_preference: string): Promise<boolean> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/register`, {
+      const response = await fetch(api.getUrl('auth/register'), {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: api.getHeaders(),
         body: JSON.stringify({ email, password, name, industry_preference }),
       });
 
