@@ -48,6 +48,13 @@ const Dashboard: React.FC = () => {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
+      
+      // DEBUG: Test API URL mapping
+      console.log('🔍 DEBUG: Testing API URL mapping...');
+      console.log('dashboard/data ->', api.getUrl('dashboard/data'));
+      console.log('dashboard/quick-actions ->', api.getUrl('dashboard/quick-actions'));
+      console.log('clients/clients/org-1 ->', api.getUrl('clients/clients/org-1'));
+      
       const [dashboardResponse, actionsResponse] = await Promise.all([
         axios.get(api.getUrl('dashboard/data'), {
           headers: token ? { Authorization: `Bearer ${token}` } : {}
