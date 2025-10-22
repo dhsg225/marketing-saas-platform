@@ -1,5 +1,5 @@
-// Centralized API service - NO HARDCODED URLs!
-// This will work with ANY domain: localhost, Vercel, cognito.guru, etc.
+// Centralized API service - HYBRID APPROACH!
+// Vercel functions for core operations, Google Cloud for heavy processing
 
 const getApiBaseUrl = () => {
   // Priority order:
@@ -20,18 +20,32 @@ const getApiBaseUrl = () => {
   return 'http://localhost:5001/api';
 };
 
+// Google Cloud Functions URLs
+const getGoogleCloudUrl = (functionName: string) => {
+  return `https://us-central1-marketing-saas-ai.cloudfunctions.net/${functionName}`;
+};
+
 export const api = {
   get baseURL() {
     return getApiBaseUrl();
   },
   
-  // Helper function to get full URL
+  // Helper function to get full URL for Vercel functions
   getUrl: (endpoint: string) => {
     const baseUrl = getApiBaseUrl();
     // Remove leading slash if present
     const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
     return `${baseUrl}/${cleanEndpoint}`;
   },
+  
+  // Google Cloud Functions URLs
+  getGoogleCloudUrl: (functionName: string) => {
+    return getGoogleCloudUrl(functionName);
+  },
+  
+  // Specific Google Cloud Functions
+  aiContentGeneration: () => getGoogleCloudUrl('ai-content-generation'),
+  documentProcessing: () => getGoogleCloudUrl('document-processing'),
   
   // Helper function to get headers with auth token
   getHeaders: (token?: string | null) => {
