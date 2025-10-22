@@ -70,3 +70,5 @@ export const api = {
 export default api;
 // Force redeploy - Thu Oct 23 01:07:28 +07 2025
 // Force rebuild - 1761156492
+// ULTRA FORCE DEPLOYMENT - 1761158166 - API MAPPING FIX
+// This comment forces Vercel to rebuild the entire application
