@@ -1,0 +1,37 @@
+# Google Cloud Build configuration for AI Worker
+steps:
+  # Build the Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/ai-worker', '.']
+    dir: 'cloud-run-ai-worker'
+
+  # Push the image to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/ai-worker']
+
+  # Deploy to Cloud Run Jobs
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'gcloud'
+    args:
+      - 'run'
+      - 'jobs'
+      - 'replace'
+      - 'ai-worker-job'
+      - '--image=gcr.io/$PROJECT_ID/ai-worker'
+      - '--region=us-central1'
+      - '--memory=2Gi'
+      - '--cpu=2'
+      - '--max-retries=3'
+      - '--parallelism=1'
+      - '--task-count=1'
+      - '--set-env-vars=UPSTASH_REDIS_REST_URL=${_UPSTASH_REDIS_REST_URL},UPSTASH_REDIS_REST_TOKEN=${_UPSTASH_REDIS_REST_TOKEN},OPENAI_API_KEY=${_OPENAI_API_KEY}'
+
+# Substitution variables (set these in Cloud Build triggers)
+substitutions:
+  _UPSTASH_REDIS_REST_URL: 'your-redis-url'
+  _UPSTASH_REDIS_REST_TOKEN: 'your-redis-token'
+  _OPENAI_API_KEY: 'your-openai-key'
+
+options:
+  machineType: 'E2_HIGHCPU_8'
+  diskSizeGb: 100
