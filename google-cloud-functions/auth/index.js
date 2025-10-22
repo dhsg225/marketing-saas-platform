@@ -10,6 +10,31 @@ exports.auth = async (req, res) => {
     return;
   }
 
+  // Check if this is a sub-path request (like /auth/organizations)
+  const pathSegments = req.url?.split('/').filter(Boolean) || [];
+  
+  if (pathSegments.includes('organizations')) {
+    // Handle organizations endpoint
+    try {
+      const organizations = [
+        {
+          organization_id: 'org-1',
+          role: 'admin',
+          created_at: new Date().toISOString()
+        }
+      ];
+
+      res.json({
+        success: true,
+        data: organizations
+      });
+    } catch (error) {
+      console.error('❌ Organizations error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+    return;
+  }
+
   if (req.method === 'POST') {
     try {
       const { email, password } = req.body;

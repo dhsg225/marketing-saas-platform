@@ -1,0 +1,9 @@
+{
+  "name": "dashboard-data",
+  "version": "1.0.0",
+  "description": "Google Cloud Function for Dashboard Data",
+  "main": "index.js",
+  "engines": {
+    "node": "20"
+  }
+}
