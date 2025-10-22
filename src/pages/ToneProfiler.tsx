@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useUser } from '../contexts/UserContext';
+import api from '../services/api';
 
 interface ToneProfile {
   tone_id: string;
@@ -46,7 +47,7 @@ const ToneProfiler: React.FC = () => {
   const loadToneProfiles = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:5001/api/tone-profiles', {
+      const response = await axios.get(api.getUrl('tone-profiles'), {
         headers: { Authorization: `Bearer ${token}` }
       });
       setToneProfiles(response.data.data || []);
@@ -76,14 +77,14 @@ const ToneProfiler: React.FC = () => {
       if (editingProfile) {
         // Update existing profile
         await axios.put(
-          `http://localhost:5001/api/tone-profiles/${editingProfile.tone_id}`,
+          api.getUrl(`tone-profiles/${editingProfile.tone_id}`),
           formData,
           { headers: { Authorization: `Bearer ${token}` } }
         );
       } else {
         // Create new profile
         await axios.post(
-          'http://localhost:5001/api/tone-profiles',
+          api.getUrl('tone-profiles'),
           formData,
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -121,7 +122,7 @@ const ToneProfiler: React.FC = () => {
     if (!window.confirm('Are you sure you want to delete this tone profile?')) return;
 
     try {
-      await axios.delete(`http://localhost:5001/api/tone-profiles/${toneId}`, {
+      await axios.delete(api.getUrl(`tone-profiles/${toneId}`), {
         headers: { Authorization: `Bearer ${token}` }
       });
       loadToneProfiles();
@@ -146,7 +147,7 @@ const ToneProfiler: React.FC = () => {
   const handleAISuggestion = async () => {
     try {
       const response = await axios.post(
-        'http://localhost:5001/api/tone-profiles/suggest',
+          api.getUrl('tone-profiles/suggest'),
         suggestionForm,
         { headers: { Authorization: `Bearer ${token}` } }
       );

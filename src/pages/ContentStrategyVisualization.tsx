@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import api from '../services/api';
 import { useUser } from '../contexts/UserContext';
 import axios from 'axios';
 
@@ -57,7 +58,7 @@ const ContentStrategyVisualization: React.FC = () => {
 
     try {
       const response = await axios.get(
-        `http://localhost:5001/api/content-strategy-viz/${selectedProject}`,
+        api.getUrl(`content-strategy-viz/${selectedProject}`),
         {
           headers: { Authorization: `Bearer ${token}` },
         }

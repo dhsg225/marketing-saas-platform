@@ -113,19 +113,23 @@ CREATE TABLE IF NOT EXISTS posts (
 CREATE TABLE IF NOT EXISTS post_types (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(100) NOT NULL,
+    purpose TEXT, -- Make purpose nullable
+    tone TEXT, -- Make tone nullable
+    ai_instructions TEXT, -- Make ai_instructions nullable
     color VARCHAR(7) DEFAULT '#3B82F6',
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- Insert default post types
-INSERT INTO post_types (name, color) VALUES 
-('Instagram Post', '#E4405F'),
-('Facebook Post', '#1877F2'),
-('Twitter Post', '#1DA1F2'),
-('LinkedIn Post', '#0077B5'),
-('TikTok Video', '#000000'),
-('Blog Post', '#FF6B6B'),
-('Email Newsletter', '#4ECDC4')
+INSERT INTO post_types (name, purpose, tone, ai_instructions, color) VALUES 
+('Instagram Post', 'Visual content for Instagram feed', 'Engaging and visual', 'Create visually appealing content with hashtags and emojis', '#E4405F'),
+('Facebook Post', 'Social media content for Facebook', 'Friendly and conversational', 'Write engaging posts that encourage comments and shares', '#1877F2'),
+('Twitter Post', 'Short-form content for Twitter/X', 'Concise and impactful', 'Keep it under 280 characters with relevant hashtags', '#1DA1F2'),
+('LinkedIn Post', 'Professional content for LinkedIn', 'Professional and informative', 'Write professional content that adds value to your network', '#0077B5'),
+('TikTok Video', 'Short-form video content', 'Trendy and entertaining', 'Create engaging short videos with trending sounds and effects', '#000000'),
+('Blog Post', 'Long-form written content', 'Informative and detailed', 'Write comprehensive articles with proper SEO optimization', '#FF6B6B'),
+('Email Newsletter', 'Email marketing content', 'Personal and engaging', 'Write personalized emails that drive engagement and conversions', '#4ECDC4')
 ON CONFLICT DO NOTHING;
 
 -- Update content_ideas to reference post_types
@@ -143,11 +147,13 @@ ALTER TABLE content_ideas ENABLE ROW LEVEL SECURITY;
 ALTER TABLE posts ENABLE ROW LEVEL SECURITY;
 
 -- Create RLS policies for tenant isolation
--- Users can only see their own data
+-- Drop existing policies if they exist, then create new ones
+DROP POLICY IF EXISTS "Users can view own data" ON users;
 CREATE POLICY "Users can view own data" ON users
     FOR ALL USING (auth.uid() = id);
 
 -- Organizations: users can only see organizations they belong to
+DROP POLICY IF EXISTS "Users can view their organizations" ON organizations;
 CREATE POLICY "Users can view their organizations" ON organizations
     FOR ALL USING (
         id IN (
@@ -158,10 +164,12 @@ CREATE POLICY "Users can view their organizations" ON organizations
     );
 
 -- User-Organization relationships
+DROP POLICY IF EXISTS "Users can view their organization relationships" ON user_organizations;
 CREATE POLICY "Users can view their organization relationships" ON user_organizations
     FOR ALL USING (user_id = auth.uid());
 
 -- Clients: users can only see clients from their organizations
+DROP POLICY IF EXISTS "Users can view clients from their organizations" ON clients;
 CREATE POLICY "Users can view clients from their organizations" ON clients
     FOR ALL USING (
         organization_id IN (
@@ -172,6 +180,7 @@ CREATE POLICY "Users can view clients from their organizations" ON clients
     );
 
 -- Projects: users can only see projects from their organizations
+DROP POLICY IF EXISTS "Users can view projects from their organizations" ON projects;
 CREATE POLICY "Users can view projects from their organizations" ON projects
     FOR ALL USING (
         organization_id IN (
@@ -182,6 +191,7 @@ CREATE POLICY "Users can view projects from their organizations" ON projects
     );
 
 -- Content Ideas: users can only see content from their organization's projects
+DROP POLICY IF EXISTS "Users can view content ideas from their projects" ON content_ideas;
 CREATE POLICY "Users can view content ideas from their projects" ON content_ideas
     FOR ALL USING (
         project_id IN (
@@ -193,6 +203,7 @@ CREATE POLICY "Users can view content ideas from their projects" ON content_idea
     );
 
 -- Posts: users can only see posts from their organization's projects
+DROP POLICY IF EXISTS "Users can view posts from their projects" ON posts;
 CREATE POLICY "Users can view posts from their projects" ON posts
     FOR ALL USING (
         project_id IN (

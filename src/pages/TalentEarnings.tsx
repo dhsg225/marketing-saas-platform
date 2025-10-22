@@ -5,6 +5,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useUser } from '../contexts/UserContext';
+import api from '../services/api';
 
 interface EarningsSummary {
   total_payouts: number;
@@ -55,7 +56,7 @@ const TalentEarnings: React.FC = () => {
 
       // Load earnings summary
       const earningsResponse = await axios.get(
-        `http://localhost:5001/api/payments/earnings?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`,
+        api.getUrl(`payments/earnings?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`),
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -65,7 +66,7 @@ const TalentEarnings: React.FC = () => {
 
       // Load payment history
       const historyResponse = await axios.get(
-        `http://localhost:5001/api/payments/history?page=${currentPage}&limit=10`,
+        api.getUrl(`payments/history?page=${currentPage}&limit=10`),
         { headers: { Authorization: `Bearer ${token}` } }
       );
 

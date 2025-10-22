@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSettings } from '../contexts/SettingsContext';
 import { useUser } from '../contexts/UserContext';
+import api from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import { XMarkIcon, CalendarIcon, UserIcon, CheckCircleIcon, ClockIcon, TagIcon, PlusIcon, PencilIcon, CheckIcon } from '@heroicons/react/24/outline';
 import { timezoneManager } from '../utils/timezone';
@@ -62,7 +63,7 @@ const ContentIdeasCalendar: React.FC<ContentIdeasCalendarProps> = ({ projectId, 
     setLoading(true);
     try {
       const token = localStorage.getItem('auth_token');
-      const response = await fetch(`http://localhost:5001/api/content-ideas/project/${projectId}?limit=100`, {
+      const response = await fetch(api.getUrl(`content-ideas/project/${projectId}?limit=100`), {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -172,7 +173,7 @@ const ContentIdeasCalendar: React.FC<ContentIdeasCalendarProps> = ({ projectId, 
 
     try {
       const token = localStorage.getItem('auth_token');
-      const response = await fetch(`http://localhost:5001/api/content-ideas/${editedIdea.id}`, {
+      const response = await fetch(api.getUrl(`content-ideas/${editedIdea.id}`), {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,

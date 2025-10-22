@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useUser } from '../contexts/UserContext';
+import api from '../services/api';
 
 type Scope = 'project' | 'user' | 'organization';
 
@@ -32,7 +33,7 @@ interface Props {
   onClose?: () => void;
 }
 
-const API = 'http://localhost:5001/api/assets';
+const API = api.getUrl('assets');
 
 const AssetLibrary: React.FC<Props> = ({ projectId, onClose }) => {
   const { user, selectedOrganization } = useUser();
@@ -171,7 +172,7 @@ const AssetLibrary: React.FC<Props> = ({ projectId, onClose }) => {
       const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout for processing
       
       try {
-        const uploadRes = await fetch('http://localhost:5001/api/uploads/process-image', { 
+        const uploadRes = await fetch(api.getUrl('uploads/process-image'), { 
           method: 'POST', 
           body: formData,
           signal: controller.signal

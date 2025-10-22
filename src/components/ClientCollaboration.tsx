@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useUser } from '../contexts/UserContext';
+import api from '../services/api';
 
 interface ClientPortalUser {
   id: string;
@@ -194,7 +195,7 @@ const ClientCollaboration: React.FC = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5001/api/client-collaboration/clients/${currentProject.client_id}/users`, {
+      const response = await fetch(api.getUrl(`client-collaboration/clients/${currentProject.client_id}/users`), {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -217,7 +218,7 @@ const ClientCollaboration: React.FC = () => {
     
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5001/api/client-collaboration/projects/${currentProject.id}/workflows`, {
+      const response = await fetch(api.getUrl(`client-collaboration/projects/${currentProject.id}/workflows`), {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -238,7 +239,7 @@ const ClientCollaboration: React.FC = () => {
     
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5001/api/client-collaboration/projects/${currentProject.id}/approval-requests`, {
+      const response = await fetch(api.getUrl(`client-collaboration/projects/${currentProject.id}/approval-requests`), {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -259,7 +260,7 @@ const ClientCollaboration: React.FC = () => {
     
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5001/api/client-collaboration/projects/${currentProject.id}/feedback`, {
+      const response = await fetch(api.getUrl(`client-collaboration/projects/${currentProject.id}/feedback`), {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -280,7 +281,7 @@ const ClientCollaboration: React.FC = () => {
     
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5001/api/client-collaboration/projects/${currentProject.id}/sessions`, {
+      const response = await fetch(api.getUrl(`client-collaboration/projects/${currentProject.id}/sessions`), {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -301,7 +302,7 @@ const ClientCollaboration: React.FC = () => {
     
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5001/api/client-collaboration/projects/${currentProject.id}/shared-assets`, {
+      const response = await fetch(api.getUrl(`client-collaboration/projects/${currentProject.id}/shared-assets`), {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -324,7 +325,7 @@ const ClientCollaboration: React.FC = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5001/api/client-collaboration/clients/${currentProject.client_id}/users`, {
+      const response = await fetch(api.getUrl(`client-collaboration/clients/${currentProject.client_id}/users`), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -352,7 +353,7 @@ const ClientCollaboration: React.FC = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5001/api/client-collaboration/projects/${currentProject.id}/workflows`, {
+      const response = await fetch(api.getUrl(`client-collaboration/projects/${currentProject.id}/workflows`), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

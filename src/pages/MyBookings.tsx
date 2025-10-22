@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useUser } from '../contexts/UserContext';
 import { useNavigate } from 'react-router-dom';
+import api from '../services/api';
 
 interface Booking {
   id: string;
@@ -39,7 +40,7 @@ const MyBookings: React.FC = () => {
   const loadBookings = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('http://localhost:5001/api/talent/bookings', {
+      const response = await axios.get(api.getUrl('talent/bookings'), {
         params: {
           role: viewMode,
           ...(filterStatus && { status: filterStatus })
@@ -60,7 +61,7 @@ const MyBookings: React.FC = () => {
   const handleAccept = async (bookingId: string) => {
     try {
       const response = await axios.post(
-        `http://localhost:5001/api/talent/bookings/${bookingId}/accept`,
+        api.getUrl(`talent/bookings/${bookingId}/accept`),
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -80,7 +81,7 @@ const MyBookings: React.FC = () => {
 
     try {
       const response = await axios.post(
-        `http://localhost:5001/api/talent/bookings/${bookingId}/decline`,
+        api.getUrl(`talent/bookings/${bookingId}/decline`),
         { reason },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -99,7 +100,7 @@ const MyBookings: React.FC = () => {
 
     try {
       const response = await axios.post(
-        `http://localhost:5001/api/talent/bookings/${bookingId}/complete`,
+        api.getUrl(`talent/bookings/${bookingId}/complete`),
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -118,7 +119,7 @@ const MyBookings: React.FC = () => {
 
     try {
       const response = await axios.post(
-        `http://localhost:5001/api/talent/bookings/${bookingId}/approve`,
+        api.getUrl(`talent/bookings/${bookingId}/approve`),
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -138,7 +139,7 @@ const MyBookings: React.FC = () => {
 
     try {
       const response = await axios.post(
-        `http://localhost:5001/api/talent/bookings/${bookingId}/cancel`,
+        api.getUrl(`talent/bookings/${bookingId}/cancel`),
         { reason },
         { headers: { Authorization: `Bearer ${token}` } }
       );

@@ -4,6 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useUser } from '../contexts/UserContext';
+import api from '../services/api';
 import { useNavigate, useParams } from 'react-router-dom';
 
 const EditTalentProfile: React.FC = () => {
@@ -19,7 +20,7 @@ const EditTalentProfile: React.FC = () => {
 
   const loadProfile = async () => {
     try {
-      const response = await axios.get(`http://localhost:5001/api/talent/profiles/${id}`, {
+      const response = await axios.get(api.getUrl(`talent/profiles/${id}`), {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (response.data.success) {
@@ -36,7 +37,7 @@ const EditTalentProfile: React.FC = () => {
 
     try {
       const response = await axios.put(
-        `http://localhost:5001/api/talent/profiles/${id}`,
+        api.getUrl(`talent/profiles/${id}`),
         profile,
         { headers: { Authorization: `Bearer ${token}` } }
       );

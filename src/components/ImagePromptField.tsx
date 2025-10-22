@@ -4,6 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useUser } from '../contexts/UserContext';
+import api from '../services/api';
 
 interface ImagePromptFieldProps {
   value: string;
@@ -54,7 +55,7 @@ const ImagePromptField: React.FC<ImagePromptFieldProps> = ({
     try {
       setLoading(true);
       const response = await axios.get(
-        `http://localhost:5001/api/posts/image-prompts/${projectId}?limit=10`,
+        api.getUrl(`posts/image-prompts/${projectId}?limit=10`),
         { headers: { Authorization: `Bearer ${token}` } }
       );
       

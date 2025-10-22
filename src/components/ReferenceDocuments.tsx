@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useUser } from '../contexts/UserContext';
 import axios from 'axios';
 import ContentMappingDialog from './ContentMappingDialog';
+import api from '../services/api';
 
 interface ReferenceDocument {
   id: string;
@@ -83,8 +84,8 @@ const ReferenceDocuments: React.FC = () => {
     
     try {
       setLoading(true);
-      const response = await axios.get(`http://localhost:5001/api/reference-documents/${selectedProject}`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      const response = await axios.get(api.getUrl(`reference-documents/${selectedProject}`), {
+        headers: api.getHeaders(token)
       });
       setDocuments(response.data.documents);
     } catch (error) {
@@ -99,8 +100,8 @@ const ReferenceDocuments: React.FC = () => {
     if (!selectedProject) return;
     
     try {
-      const response = await axios.get(`http://localhost:5001/api/reference-documents/${selectedProject}/categories`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      const response = await axios.get(api.getUrl(`reference-documents/${selectedProject}/categories`), {
+        headers: api.getHeaders(token)
       });
       setCategories(response.data.categories);
     } catch (error) {
@@ -130,12 +131,12 @@ const ReferenceDocuments: React.FC = () => {
       setError(null);
       
       const response = await axios.post(
-        `http://localhost:5001/api/reference-documents/${selectedProject}`,
+        api.getUrl(`reference-documents/${selectedProject}`),
         formData,
         {
           headers: {
             'Content-Type': 'multipart/form-data',
-            ...(token ? { Authorization: `Bearer ${token}` } : {})
+            ...api.getHeaders(token)
           },
         }
       );
@@ -169,10 +170,10 @@ const ReferenceDocuments: React.FC = () => {
   const handleDownload = async (doc: ReferenceDocument) => {
     try {
       const response = await axios.get(
-        `http://localhost:5001/api/reference-documents/${selectedProject}/${doc.id}/download`,
+        api.getUrl(`reference-documents/${selectedProject}/${doc.id}/download`),
         { 
           responseType: 'blob',
-          headers: token ? { Authorization: `Bearer ${token}` } : {}
+          headers: api.getHeaders(token)
         }
       );
       
@@ -200,8 +201,8 @@ const ReferenceDocuments: React.FC = () => {
     }
 
     try {
-      await axios.delete(`http://localhost:5001/api/reference-documents/${selectedProject}/${doc.id}`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      await axios.delete(api.getUrl(`reference-documents/${selectedProject}/${doc.id}`), {
+        headers: api.getHeaders(token)
       });
       setSuccess('Document deleted successfully!');
       fetchDocuments(); // Refresh the list
@@ -226,17 +227,14 @@ const ReferenceDocuments: React.FC = () => {
     try {
       // Process the document directly using its ID - let the backend handle file retrieval
       const aiResponse = await axios.post(
-        `http://localhost:5001/api/document-ingestion/${selectedProject}/process-existing`,
+        api.getUrl(`document-ingestion/${selectedProject}/process-existing`),
         {
           documentId: doc.id,
           documentName: doc.file_name,
           mimeType: doc.mime_type
         },
         {
-          headers: {
-            'Content-Type': 'application/json',
-            ...(token ? { Authorization: `Bearer ${token}` } : {})
-          }
+          headers: api.getHeaders(token)
         }
       );
       
@@ -324,13 +322,10 @@ const ReferenceDocuments: React.FC = () => {
       setError(null);
       
       const response = await axios.put(
-        `http://localhost:5001/api/reference-documents/${selectedProject}/${editingDocument.id}`,
+        api.getUrl(`reference-documents/${selectedProject}/${editingDocument.id}`),
         editForm,
         {
-          headers: {
-            'Content-Type': 'application/json',
-            ...(token ? { Authorization: `Bearer ${token}` } : {})
-          }
+          headers: api.getHeaders(token)
         }
       );
 
@@ -358,13 +353,10 @@ const ReferenceDocuments: React.FC = () => {
       setError(null);
       
       const response = await axios.post(
-        `http://localhost:5001/api/reference-documents/${selectedProject}/${editingDocument.id}/generate-description`,
+        api.getUrl(`reference-documents/${selectedProject}/${editingDocument.id}/generate-description`),
         {},
         {
-          headers: {
-            'Content-Type': 'application/json',
-            ...(token ? { Authorization: `Bearer ${token}` } : {})
-          }
+          headers: api.getHeaders(token)
         }
       );
 

@@ -4,6 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useUser } from '../contexts/UserContext';
+import api from '../services/api';
 
 interface PortfolioItem {
   id: string;
@@ -53,7 +54,7 @@ const PortfolioManager: React.FC<PortfolioManagerProps> = ({ talentId, isOwner }
   const loadPortfolio = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:5001/api/talent/profiles/${talentId}/portfolio`
+        api.getUrl(`talent/profiles/${talentId}/portfolio`)
       );
       
       if (response.data.success) {
@@ -77,7 +78,7 @@ const PortfolioManager: React.FC<PortfolioManagerProps> = ({ talentId, isOwner }
       formData.append('file', file);
 
       const response = await axios.post(
-        'http://localhost:5001/api/uploads/upload',
+        api.getUrl('uploads/upload'),
         formData,
         {
           headers: {
@@ -113,7 +114,7 @@ const PortfolioManager: React.FC<PortfolioManagerProps> = ({ talentId, isOwner }
 
     try {
       const response = await axios.post(
-        `http://localhost:5001/api/talent/profiles/${talentId}/portfolio`,
+        api.getUrl(`talent/profiles/${talentId}/portfolio`),
         newItem,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -149,7 +150,7 @@ const PortfolioManager: React.FC<PortfolioManagerProps> = ({ talentId, isOwner }
     setLoading(true);
     try {
       const response = await axios.put(
-        `http://localhost:5001/api/talent/portfolio/${editingItem.id}`,
+        api.getUrl(`talent/portfolio/${editingItem.id}`),
         editingItem,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -172,7 +173,7 @@ const PortfolioManager: React.FC<PortfolioManagerProps> = ({ talentId, isOwner }
 
     try {
       const response = await axios.delete(
-        `http://localhost:5001/api/talent/portfolio/${itemId}`,
+        api.getUrl(`talent/portfolio/${itemId}`),
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -194,7 +195,7 @@ const PortfolioManager: React.FC<PortfolioManagerProps> = ({ talentId, isOwner }
       }));
 
       const response = await axios.put(
-        `http://localhost:5001/api/talent/profiles/${talentId}/portfolio/reorder`,
+        api.getUrl(`talent/profiles/${talentId}/portfolio/reorder`),
         { items: reorderedItems },
         { headers: { Authorization: `Bearer ${token}` } }
       );

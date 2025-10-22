@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useUser } from '../contexts/UserContext';
+import api from '../services/api';
 
 interface AIModel {
   taskType: string;
@@ -38,13 +39,13 @@ const AIConfigurationSection: React.FC = () => {
 
       // Fetch all AI configuration data
       const [configResponse, modelsResponse, useCasesResponse] = await Promise.all([
-        axios.get('http://localhost:5001/api/ai-config/current', {
+        axios.get(api.getUrl('ai-config/current'), {
           headers: token ? { Authorization: `Bearer ${token}` } : {}
         }),
-        axios.get('http://localhost:5001/api/ai-config/models', {
+        axios.get(api.getUrl('ai-config/models'), {
           headers: token ? { Authorization: `Bearer ${token}` } : {}
         }),
-        axios.get('http://localhost:5001/api/ai-config/use-cases', {
+        axios.get(api.getUrl('ai-config/use-cases'), {
           headers: token ? { Authorization: `Bearer ${token}` } : {}
         })
       ]);

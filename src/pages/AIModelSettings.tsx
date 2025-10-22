@@ -11,6 +11,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useUser } from '../contexts/UserContext';
+import api from '../services/api';
 
 interface AIModel {
   modelId: string;
@@ -68,7 +69,7 @@ const AIModelSettings: React.FC = () => {
 
   const loadModels = async () => {
     try {
-      const response = await axios.get('http://localhost:5001/api/ai/models?activeOnly=false');
+        const response = await axios.get(api.getUrl('ai/models?activeOnly=false'));
       if (response.data.success) {
         setModels(response.data.models);
       }
@@ -79,7 +80,7 @@ const AIModelSettings: React.FC = () => {
 
   const loadRecentJobs = async () => {
     try {
-      const response = await axios.get('http://localhost:5001/api/ai/jobs?limit=50', {
+        const response = await axios.get(api.getUrl('ai/jobs?limit=50'), {
         headers: token ? { Authorization: `Bearer ${token}` } : {}
       });
       if (response.data.success) {
@@ -92,7 +93,7 @@ const AIModelSettings: React.FC = () => {
 
   const loadUserApiKeys = async () => {
     try {
-      const response = await axios.get('http://localhost:5001/api/user-api-keys/keys', {
+        const response = await axios.get(api.getUrl('user-api-keys/keys'), {
         headers: token ? { Authorization: `Bearer ${token}` } : {}
       });
       if (response.data.success) {
@@ -112,7 +113,7 @@ const AIModelSettings: React.FC = () => {
     setSavingKeys(prev => ({ ...prev, [modelId]: true }));
     
     try {
-      const response = await axios.post('http://localhost:5001/api/user-api-keys/keys', {
+        const response = await axios.post(api.getUrl('user-api-keys/keys'), {
         modelId,
         apiKey
       }, {
@@ -138,7 +139,7 @@ const AIModelSettings: React.FC = () => {
     }
 
     try {
-      const response = await axios.delete(`http://localhost:5001/api/user-api-keys/keys/${modelId}`, {
+      const response = await axios.delete(api.getUrl(`user-api-keys/keys/${modelId}`), {
         headers: token ? { Authorization: `Bearer ${token}` } : {}
       });
 

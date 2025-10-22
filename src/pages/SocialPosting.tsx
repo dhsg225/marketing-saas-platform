@@ -4,6 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useUser } from '../contexts/UserContext';
+import api from '../services/api';
 
 interface Project {
   id: string;
@@ -95,7 +96,7 @@ const SocialPosting: React.FC = () => {
 
   const loadProjects = async () => {
     try {
-      const response = await axios.get('http://localhost:5001/api/playbook/projects', {
+      const response = await axios.get(api.getUrl('playbook/projects'), {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -127,7 +128,7 @@ const SocialPosting: React.FC = () => {
     
     try {
       const response = await axios.get(
-        `http://localhost:5001/api/social/connections/${selectedProject}`,
+        api.getUrl(`social/connections/${selectedProject}`),
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
@@ -144,7 +145,7 @@ const SocialPosting: React.FC = () => {
     
     try {
       const response = await axios.get(
-        `http://localhost:5001/api/social/posts/${selectedProject}`,
+        api.getUrl(`social/posts/${selectedProject}`),
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
@@ -158,7 +159,7 @@ const SocialPosting: React.FC = () => {
 
   const loadAvailableLateProfiles = async () => {
     try {
-      const response = await axios.get('http://localhost:5001/api/social/profiles', {
+      const response = await axios.get(api.getUrl('social/profiles'), {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -180,7 +181,7 @@ const SocialPosting: React.FC = () => {
     
     try {
       const response = await axios.post(
-        'http://localhost:5001/api/social/connections',
+        api.getUrl('social/connections'),
         {
           projectId: selectedProject,
           lateProfileId: newConnection.lateProfileId,
@@ -215,7 +216,7 @@ const SocialPosting: React.FC = () => {
     
     try {
       const response = await axios.delete(
-        `http://localhost:5001/api/social/connections/${connectionId}`,
+        api.getUrl(`social/connections/${connectionId}`),
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
@@ -244,7 +245,7 @@ const SocialPosting: React.FC = () => {
     
     try {
       const response = await axios.post(
-        `http://localhost:5001/api/social/posts/${selectedProject}`,
+        api.getUrl(`social/posts/${selectedProject}`),
         {
           content: newPost.content,
           platforms: newPost.platforms,

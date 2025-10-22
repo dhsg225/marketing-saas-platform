@@ -5,6 +5,7 @@ import axios from 'axios';
 import ImagePromptField from '../components/ImagePromptField';
 import RichTextEditor from '../components/RichTextEditor';
 import { CalendarIcon, SparklesIcon, ArrowLeftIcon, DocumentArrowDownIcon, ArrowPathIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
+import api from '../services/api';
 
 interface ContentRequest {
   type: string;
@@ -122,9 +123,9 @@ const ContentGenerator: React.FC = () => {
         console.log('📖 Loading saved draft for concept:', prefilledData.id);
         
         const response = await axios.get(
-          `http://localhost:5001/api/posts/draft-by-concept/${prefilledData.id}`,
+          api.getUrl(`posts/draft-by-concept/${prefilledData.id}`),
           {
-            headers: { Authorization: `Bearer ${token}` }
+            headers: api.getHeaders(token)
           }
         );
 
@@ -207,8 +208,8 @@ const ContentGenerator: React.FC = () => {
       
       try {
         const response = await axios.get(
-          'http://localhost:5001/api/tone-profiles',
-          { headers: { Authorization: `Bearer ${token}` } }
+          api.getUrl('tone-profiles'),
+          { headers: api.getHeaders(token) }
         );
         setToneProfiles(response.data.data || []);
       } catch (error) {
@@ -231,8 +232,8 @@ const ContentGenerator: React.FC = () => {
       try {
         // First get projects for the client
         const projectsResponse = await axios.get(
-          `http://localhost:5001/api/clients/projects/client/${selectedClient}`,
-          token ? { headers: { Authorization: `Bearer ${token}` } } : undefined
+          api.getUrl(`clients/projects/client/${selectedClient}`),
+          token ? { headers: api.getHeaders(token) } : undefined
         );
         
         const projects = projectsResponse.data.data || [];
@@ -244,7 +245,7 @@ const ContentGenerator: React.FC = () => {
         // Get post types for the first project (or could be made selectable)
         const projectId = projects[0].id;
         const postTypesResponse = await axios.get(
-          `http://localhost:5001/api/playbook/recipes/${projectId}`
+          api.getUrl(`playbook/recipes/${projectId}`)
         );
         
         setPostTypes(postTypesResponse.data.data || []);
@@ -324,9 +325,9 @@ const ContentGenerator: React.FC = () => {
       setLoadingAssets(true);
       try {
         const response = await axios.get(
-          `http://localhost:5001/api/assets?project_id=${currentProject.id}&scope=project&limit=100`,
+          api.getUrl(`assets?project_id=${currentProject.id}&scope=project&limit=100`),
           {
-            headers: { 'Authorization': `Bearer ${token}` }
+            headers: api.getHeaders(token)
           }
         );
         
@@ -356,7 +357,7 @@ const ContentGenerator: React.FC = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:5001/api/content/generate', {
+      const response = await fetch(api.getUrl('/content/generate'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -374,7 +375,7 @@ const ContentGenerator: React.FC = () => {
         if (formData.toneProfileId && token) {
           try {
             await axios.post(
-              `http://localhost:5001/api/tone-profiles/${formData.toneProfileId}/increment-usage`,
+              api.getUrl(`/tone-profiles/${formData.toneProfileId}/increment-usage`),
               {},
               { headers: { Authorization: `Bearer ${token}` } }
             );
@@ -435,7 +436,7 @@ const ContentGenerator: React.FC = () => {
 
     setIsEnhancingPrompt(true);
     try {
-      const response = await fetch('http://localhost:5001/api/content/enhance-prompt', {
+      const response = await fetch(api.getUrl('/content/enhance-prompt'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -489,7 +490,7 @@ const ContentGenerator: React.FC = () => {
       };
       console.log('📤 Frontend sending save-draft request:', requestBody);
       const response = await axios.post(
-        'http://localhost:5001/api/posts/save-draft',
+        api.getUrl('/posts/save-draft'),
         requestBody,
         {
           headers: {
@@ -541,7 +542,7 @@ const ContentGenerator: React.FC = () => {
       };
       console.log('📤 Frontend sending mark-as-ready request:', requestBody);
       const response = await axios.post(
-        'http://localhost:5001/api/posts/save-draft',
+        api.getUrl('/posts/save-draft'),
         requestBody,
         {
           headers: {
@@ -576,7 +577,7 @@ const ContentGenerator: React.FC = () => {
   const handleAutoSave = async (content: string) => {
     try {
       await axios.post(
-        'http://localhost:5001/api/posts/auto-save',
+        api.getUrl('/posts/auto-save'),
         {
           concept_id: prefilledData?.id,
           project_id: currentProject?.id,

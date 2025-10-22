@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useUser } from '../contexts/UserContext';
 import { ChevronRightIcon, UserIcon, BuildingOfficeIcon, FolderIcon } from '@heroicons/react/24/outline';
 import axios from 'axios';
+import api from '../services/api';
 
 const BreadcrumbNav: React.FC = () => {
   const { user, organizations, clients, selectedOrganization, selectedClient, selectedProject, token } = useUser();
@@ -16,7 +17,7 @@ const BreadcrumbNav: React.FC = () => {
       }
 
       try {
-        const response = await axios.get(`http://localhost:5001/api/projects/${selectedProject}`, {
+        const response = await axios.get(api.getUrl(`projects/${selectedProject}`), {
           headers: { Authorization: `Bearer ${token}` }
         });
         

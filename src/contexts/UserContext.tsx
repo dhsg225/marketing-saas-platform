@@ -83,7 +83,22 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+  // Dynamic API URL - works with any domain
+  const getApiBaseUrl = () => {
+    if (process.env.REACT_APP_API_URL) {
+      return process.env.REACT_APP_API_URL;
+    }
+    
+    // Auto-detect production domain
+    if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
+      return `${window.location.protocol}//${window.location.hostname}/api`;
+    }
+    
+    // Development fallback
+    return 'http://localhost:5001/api';
+  };
+  
+  const API_BASE_URL = getApiBaseUrl();
 
   // Check for existing token on mount
   useEffect(() => {

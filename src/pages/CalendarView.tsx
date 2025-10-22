@@ -3,6 +3,7 @@ import { CalendarIcon, ClockIcon, ChartBarIcon, EyeIcon, PlusIcon, PencilIcon, C
 import CalendarItem from '../components/CalendarItem';
 import ReportOptionsModal from '../components/ReportOptionsModal';
 import { useUser } from '../contexts/UserContext';
+import api from '../services/api';
 import { 
   getDateRangeForView, 
   isDateInRange, 
@@ -160,7 +161,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ selectedProject }) => {
 
     try {
       const token = localStorage.getItem('auth_token');
-      const response = await fetch(`http://localhost:5001/api/content-ideas/${editedIdea.id}`, {
+      const response = await fetch(api.getUrl(`content-ideas/${editedIdea.id}`), {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -378,7 +379,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ selectedProject }) => {
   const loadProjectName = async (projectId: string) => {
     try {
       const token = localStorage.getItem('auth_token');
-      const response = await fetch(`http://localhost:5001/api/projects/${projectId}`, {
+      const response = await fetch(api.getUrl(`projects/${projectId}`), {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -401,7 +402,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ selectedProject }) => {
   const loadContentIdeas = async (projectId: string) => {
     try {
       const token = localStorage.getItem('auth_token');
-      const response = await fetch(`http://localhost:5001/api/content-ideas/project/${projectId}`, {
+      const response = await fetch(api.getUrl(`content-ideas/project/${projectId}`), {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -421,7 +422,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ selectedProject }) => {
   const loadScheduledPosts = async (projectId: string) => {
     try {
       const token = localStorage.getItem('auth_token');
-      const response = await fetch(`http://localhost:5001/api/posts/scheduled/${projectId}`, {
+      const response = await fetch(api.getUrl(`posts/scheduled/${projectId}`), {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -450,8 +451,8 @@ const CalendarView: React.FC<CalendarViewProps> = ({ selectedProject }) => {
         
         // Load both content pieces and approved content ideas
         const [contentHistoryRes, contentIdeasRes] = await Promise.all([
-          fetch('http://localhost:5001/api/content/history'),
-          fetch(`http://localhost:5001/api/content-ideas/project/${currentProject}`, {
+          fetch(api.getUrl('content/history')),
+          fetch(api.getUrl(`content-ideas/project/${currentProject}`), {
             headers: {
               'Authorization': `Bearer ${token}`,
               'Content-Type': 'application/json'

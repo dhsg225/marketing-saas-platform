@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useUser } from '../contexts/UserContext';
+import api from '../services/api';
 import axios from 'axios';
 
 interface PostSection {
@@ -113,7 +114,7 @@ const PostCreator: React.FC = () => {
   const loadSignatureBlocks = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:5001/api/playbook/signature-blocks/${selectedProject}`,
+        api.getUrl(`playbook/signature-blocks/${selectedProject}`),
         { headers: token ? { Authorization: `Bearer ${token}` } : {} }
       );
       setSignatureBlocks(response.data.data || []);
@@ -144,7 +145,7 @@ const PostCreator: React.FC = () => {
     setLoading(true);
     try {
       const response = await axios.post(
-        `http://localhost:5001/api/posts/${post.id}/sections/${section.id}/generate`,
+        api.getUrl(`posts/${post.id}/sections/${section.id}/generate`),
         {
           prompt: `Generate ${section.section_type.replace('_', ' ')} content for: ${post.title}`,
           ai_model: 'claude',
@@ -188,7 +189,7 @@ const PostCreator: React.FC = () => {
         : { ...post, project_id: selectedProject, sections };
 
       const response = await axios.post(
-        `http://localhost:5001${endpoint}`,
+        api.getUrl(endpoint.replace('/api/', '')),
         payload,
         { headers: token ? { Authorization: `Bearer ${token}` } : {} }
       );

@@ -4,6 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useUser } from '../contexts/UserContext';
+import api from '../services/api';
 
 interface Service {
   id: string;
@@ -55,7 +56,7 @@ const ServicesManager: React.FC<ServicesManagerProps> = ({ talentId, isOwner }) 
   const loadServices = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:5001/api/talent/profiles/${talentId}/services?is_active=true`
+        api.getUrl(`talent/profiles/${talentId}/services?is_active=true`)
       );
       
       if (response.data.success) {
@@ -72,7 +73,7 @@ const ServicesManager: React.FC<ServicesManagerProps> = ({ talentId, isOwner }) 
 
     try {
       const response = await axios.post(
-        `http://localhost:5001/api/talent/profiles/${talentId}/services`,
+        api.getUrl(`talent/profiles/${talentId}/services`),
         newService,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -111,7 +112,7 @@ const ServicesManager: React.FC<ServicesManagerProps> = ({ talentId, isOwner }) 
     setLoading(true);
     try {
       const response = await axios.put(
-        `http://localhost:5001/api/talent/services/${editingService.id}`,
+        api.getUrl(`talent/services/${editingService.id}`),
         editingService,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -134,7 +135,7 @@ const ServicesManager: React.FC<ServicesManagerProps> = ({ talentId, isOwner }) 
 
     try {
       const response = await axios.delete(
-        `http://localhost:5001/api/talent/services/${serviceId}`,
+        api.getUrl(`talent/services/${serviceId}`),
         { headers: { Authorization: `Bearer ${token}` } }
       );
 

@@ -3,6 +3,7 @@ import { useUser } from '../contexts/UserContext';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import ReportOptionsModal from '../components/ReportOptionsModal';
+import api from '../services/api';
 import {
   PlusIcon,
   ChevronDownIcon,
@@ -197,7 +198,7 @@ const ContentList: React.FC = () => {
         params.append('status_filter', filters.approval_status);
       }
       
-      const url = `http://localhost:5001/api/content-list/project/${currentProject.id}?${params.toString()}`;
+      const url = api.getUrl(`content-list/project/${currentProject.id}?${params.toString()}`);
       console.log('ContentList: Making API call to:', url);
       
       const response = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } });
@@ -290,7 +291,7 @@ const ContentList: React.FC = () => {
     try {
       const token = localStorage.getItem('auth_token');
       await axios.put(
-        `http://localhost:5001/api/content-list/${draggedItem.id}/move`,
+        api.getUrl(`content-list/${draggedItem.id}/move`),
         { new_stage: targetStage },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -359,7 +360,7 @@ const ContentList: React.FC = () => {
     try {
       const token = localStorage.getItem('auth_token');
       const response = await axios.post(
-        'http://localhost:5001/api/content-list',
+          api.getUrl('content-list'),
         {
           ...newContent,
           project_id: currentProject?.id
@@ -420,7 +421,7 @@ const ContentList: React.FC = () => {
     try {
       const token = localStorage.getItem('auth_token');
       const response = await axios.put(
-        `http://localhost:5001/api/content-ideas/${editingItem.id}`,
+        api.getUrl(`content-ideas/${editingItem.id}`),
         {
           suggested_date: editForm.suggested_date,
           suggested_time: editForm.suggested_time

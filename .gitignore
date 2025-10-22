@@ -174,3 +174,4 @@ local/
 dev/
 *.env*
 .env.backup
+.vercel

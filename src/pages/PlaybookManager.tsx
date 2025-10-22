@@ -6,6 +6,7 @@ import AssetLibrary from '../components/AssetLibrary';
 import ReferenceDocuments from '../components/ReferenceDocuments';
 import ManualDistribution from '../components/ManualDistribution';
 import ClientCollaboration from '../components/ClientCollaboration';
+import api from '../services/api';
 
 interface ContentIdea {
   id: string;
@@ -263,15 +264,15 @@ const PlaybookManager: React.FC = () => {
     try {
       setLoading(true);
       const [hashtagsRes, recipesRes, templatesRes, ideasRes, signaturesRes, strategiesRes] = await Promise.all([
-        axios.get(`http://localhost:5001/api/playbook/hashtags/${selectedProject}`),
-        axios.get(`http://localhost:5001/api/playbook/recipes/${selectedProject}`),
-        axios.get(`http://localhost:5001/api/playbook/templates/${selectedProject}`),
-        axios.get(`http://localhost:5001/api/content-ideas/project/${selectedProject}?limit=1000`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {}
+        axios.get(api.getUrl(`playbook/hashtags/${selectedProject}`)),
+        axios.get(api.getUrl(`playbook/recipes/${selectedProject}`)),
+        axios.get(api.getUrl(`playbook/templates/${selectedProject}`)),
+        axios.get(api.getUrl(`content-ideas/project/${selectedProject}?limit=1000`), {
+          headers: api.getHeaders(token)
         }),
-        axios.get(`http://localhost:5001/api/playbook/signature-blocks/${selectedProject}`),
-        axios.get(`http://localhost:5001/api/content-strategies/${selectedProject}`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {}
+        axios.get(api.getUrl(`playbook/signature-blocks/${selectedProject}`)),
+        axios.get(api.getUrl(`content-strategies/${selectedProject}`), {
+          headers: api.getHeaders(token)
         }).catch(() => ({ data: { success: true, data: [] } }))
       ]);
 
@@ -293,7 +294,7 @@ const PlaybookManager: React.FC = () => {
     try {
       if (!selectedClient || !selectedOrganization) return;
       await axios.post(
-        'http://localhost:5001/api/clients/projects',
+        api.getUrl('/clients/projects'),
         {
           client_id: selectedClient,
           organization_id: selectedOrganization,
@@ -315,7 +316,7 @@ const PlaybookManager: React.FC = () => {
     if (!selectedProject) return;
 
     try {
-      await axios.post('http://localhost:5001/api/playbook/hashtags', {
+      await axios.post(api.getUrl('/playbook/hashtags'), {
         project_id: selectedProject,
         ...newHashtag
       });
@@ -333,13 +334,13 @@ const PlaybookManager: React.FC = () => {
     try {
       if (editingRecipe) {
         // Update existing recipe
-        await axios.put(`http://localhost:5001/api/playbook/recipes/${editingRecipe.id}`, {
+        await axios.put(api.getUrl(`/playbook/recipes/${editingRecipe.id}`), {
           ...newRecipe
         });
         setEditingRecipe(null);
       } else {
         // Create new recipe
-      await axios.post('http://localhost:5001/api/playbook/recipes', {
+      await axios.post(api.getUrl('/playbook/recipes'), {
         project_id: selectedProject,
         ...newRecipe
       });
@@ -367,7 +368,7 @@ const PlaybookManager: React.FC = () => {
     if (!selectedProject) return;
 
     try {
-      await axios.post('http://localhost:5001/api/playbook/templates', {
+      await axios.post(api.getUrl('/playbook/templates'), {
         project_id: selectedProject,
         ...newTemplate
       });
@@ -389,7 +390,7 @@ const PlaybookManager: React.FC = () => {
     if (!selectedProject) return;
 
     try {
-      await axios.post('http://localhost:5001/api/playbook/signature-blocks', {
+      await axios.post(api.getUrl('/playbook/signature-blocks'), {
         project_id: selectedProject,
         ...newSignatureBlock
       });
@@ -419,7 +420,7 @@ const PlaybookManager: React.FC = () => {
     if (!window.confirm('Are you sure you want to delete this signature block?')) return;
 
     try {
-      await axios.delete(`http://localhost:5001/api/playbook/signature-blocks/${blockId}`);
+      await axios.delete(api.getUrl(`playbook/signature-blocks/${blockId}`));
       loadProjectData();
     } catch (error) {
       console.error('Failed to delete signature block:', error);
@@ -431,7 +432,7 @@ const PlaybookManager: React.FC = () => {
     if (!selectedProject) return;
 
     try {
-      await axios.post('http://localhost:5001/api/content-ideas', {
+      await axios.post(api.getUrl('/content-ideas'), {
         project_id: selectedProject,
         ...newIdea
       }, {
@@ -478,7 +479,7 @@ const PlaybookManager: React.FC = () => {
 
     setIsGenerating(true);
     try {
-      const response = await axios.post('http://localhost:5001/api/content-ideas/generate-bulk', {
+      const response = await axios.post(api.getUrl('/content-ideas/generate-bulk'), {
         project_id: selectedProject,
         ...bulkGenerationSettings
       }, {
@@ -572,7 +573,7 @@ const PlaybookManager: React.FC = () => {
     if (!selectedProject) return;
 
     try {
-      const response = await axios.post(`http://localhost:5001/api/content-strategies`, {
+      const response = await axios.post(api.getUrl(`/content-strategies`), {
         project_id: selectedProject,
         ...newContentStrategy
       }, {
@@ -601,7 +602,7 @@ const PlaybookManager: React.FC = () => {
     }
 
     try {
-      await axios.delete(`http://localhost:5001/api/playbook/recipes/${recipeId}`);
+      await axios.delete(api.getUrl(`playbook/recipes/${recipeId}`));
       loadProjectData();
     } catch (error) {
       console.error('Failed to delete recipe:', error);
@@ -631,7 +632,7 @@ const PlaybookManager: React.FC = () => {
 
     try {
       setIsDeleting(true);
-      const response = await axios.delete(`http://localhost:5001/api/content-ideas/${ideaId}`, {
+      const response = await axios.delete(api.getUrl(`/content-ideas/${ideaId}`), {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -670,7 +671,7 @@ const PlaybookManager: React.FC = () => {
     try {
       setIsDeleting(true);
       const deletePromises = Array.from(selectedContentIdeas).map(ideaId =>
-        axios.delete(`http://localhost:5001/api/content-ideas/${ideaId}`, {
+        axios.delete(api.getUrl(`/content-ideas/${ideaId}`), {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -695,7 +696,7 @@ const PlaybookManager: React.FC = () => {
   const handleApproveContentIdea = async (ideaId: string) => {
     try {
       const token = localStorage.getItem('auth_token');
-      await axios.put(`http://localhost:5001/api/content-ideas/${ideaId}/approve`, {}, {
+      await axios.put(api.getUrl(`/content-ideas/${ideaId}/approve`), {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -726,7 +727,7 @@ const PlaybookManager: React.FC = () => {
     try {
       const token = localStorage.getItem('auth_token');
       const approvePromises = Array.from(selectedContentIdeas).map(id => 
-        axios.put(`http://localhost:5001/api/content-ideas/${id}/approve`, {}, {
+        axios.put(api.getUrl(`/content-ideas/${id}/approve`), {}, {
           headers: { Authorization: `Bearer ${token}` }
         })
       );
@@ -1033,7 +1034,7 @@ const PlaybookManager: React.FC = () => {
                     onClick={async()=>{
                       try{
                         setLoading(true);
-                        const res = await axios.post('http://localhost:5001/api/playbook/post-types/suggest', {
+                        const res = await axios.post(api.getUrl('/playbook/post-types/suggest'), {
                           industry: newProject.industry,
                           goals: '', audience: '', current_mix: ''
                         });
@@ -1102,7 +1103,7 @@ const PlaybookManager: React.FC = () => {
                           e.stopPropagation();
                         try{
                           setLoading(true);
-                          const res = await axios.post('http://localhost:5001/api/playbook/post-types/purpose', {
+                          const res = await axios.post(api.getUrl('/playbook/post-types/purpose'), {
                             industry: newProject.industry,
                             name: newRecipe.name,
                             context: newRecipe.ai_instructions || ''
@@ -1165,7 +1166,7 @@ const PlaybookManager: React.FC = () => {
                             setLoading(true);
                             
                             try {
-                              const response = await fetch('http://localhost:5001/api/playbook/post-types/purpose', {
+                              const response = await fetch(api.getUrl('/playbook/post-types/purpose'), {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({ 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import api from '../services/api';
 import { useUser } from '../contexts/UserContext';
 import ReportOptionsModal from '../components/ReportOptionsModal';
 import axios from 'axios';
@@ -40,7 +41,7 @@ const Reports: React.FC = () => {
       
       // Get all projects for the selected client
       const response = await axios.get(
-        `http://localhost:5001/api/clients/projects/client/${selectedClient}`,
+        api.getUrl(`clients/projects/client/${selectedClient}`),
         { headers: token ? { Authorization: `Bearer ${token}` } : {} }
       );
 

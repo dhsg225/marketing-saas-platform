@@ -1,4 +1,5 @@
 // [2025-10-19] - Example Post Creation Form with Image Prompt Integration
+import api from '../services/api';
 // Demonstrates how to use the ImagePromptField component in post creation
 
 import React, { useState } from 'react';
@@ -54,7 +55,7 @@ const PostCreationForm: React.FC<PostCreationFormProps> = ({
 
     try {
       const response = await axios.post(
-        'http://localhost:5001/api/posts/create/all-at-once',
+        api.getUrl('posts/create/all-at-once'),
         {
           ...formData,
           project_id: currentProject.id

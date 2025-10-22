@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import api from '../services/api';
 import axios from 'axios';
 import { 
   BuildingOfficeIcon, 
@@ -96,7 +97,7 @@ const ClientManagement: React.FC = () => {
     budget: 0
   });
 
-  const API_BASE_URL = 'http://localhost:5001/api/clients';
+  const API_BASE_URL = api.getUrl('clients');
 
   const authHeaders = token
     ? { headers: { Authorization: `Bearer ${token}` } }

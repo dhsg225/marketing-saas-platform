@@ -4,6 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useUser } from '../contexts/UserContext';
+import api from '../services/api';
 import { useNavigate } from 'react-router-dom';
 
 interface ProfileData {
@@ -70,7 +71,7 @@ const CreateTalentProfile: React.FC = () => {
 
   const checkExistingProfile = async () => {
     try {
-      const response = await axios.get('http://localhost:5001/api/talent/profiles/my/profile', {
+      const response = await axios.get(api.getUrl('talent/profiles/my/profile'), {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -97,7 +98,7 @@ const CreateTalentProfile: React.FC = () => {
 
     try {
       const response = await axios.post(
-        'http://localhost:5001/api/talent/profiles',
+        api.getUrl('talent/profiles'),
         profileData,
         { headers: { Authorization: `Bearer ${token}` } }
       );

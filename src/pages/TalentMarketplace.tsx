@@ -1,4 +1,5 @@
 // [October 15, 2025] - Talent Marketplace Browse Page
+import api from '../services/api';
 // Purpose: Search and browse talent profiles with filters
 
 import React, { useState, useEffect } from 'react';
@@ -73,7 +74,7 @@ const TalentMarketplace: React.FC = () => {
         )
       };
 
-      const response = await axios.get('http://localhost:5001/api/talent/profiles', {
+      const response = await axios.get(api.getUrl('talent/profiles'), {
         params
       });
 

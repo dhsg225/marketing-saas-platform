@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useUser } from '../contexts/UserContext';
+import api from '../services/api';
 
 // [2025-10-08] - Added eye icons for password visibility toggle
 const EyeIcon = ({ className }: { className?: string }) => (
@@ -80,7 +81,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onClose }) => {
 
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:5001/api/auth/forgot-password', {
+      const response = await fetch(api.getUrl('auth/forgot-password'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

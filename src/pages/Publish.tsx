@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useUser } from '../contexts/UserContext';
 import MediaPicker from '../components/MediaPicker';
+import api from '../services/api';
 
 interface LateProfile {
   _id: string;
@@ -97,8 +98,8 @@ const Publish: React.FC = () => {
 
   const testConnection = async (): Promise<boolean> => {
     try {
-      const response = await axios.get('http://localhost:5001/api/social/test', {
-        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      const response = await axios.get(api.getUrl('social/test'), {
+        headers: api.getHeaders(token)
       });
       return response.data.success;
     } catch (error) {
@@ -109,8 +110,8 @@ const Publish: React.FC = () => {
 
   const loadProfiles = async () => {
     try {
-      const response = await axios.get('http://localhost:5001/api/social/profiles', {
-        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      const response = await axios.get(api.getUrl('social/profiles'), {
+        headers: api.getHeaders(token)
       });
       setProfiles(response.data.data?.profiles || []);
     } catch (error) {
@@ -121,8 +122,8 @@ const Publish: React.FC = () => {
   const loadAccounts = async (profileId?: string) => {
     try {
       const url = profileId ? 
-        `http://localhost:5001/api/social/accounts?profileId=${profileId}` : 
-        'http://localhost:5001/api/social/accounts';
+        api.getUrl(`social/accounts?profileId=${profileId}`) : 
+        api.getUrl('social/accounts');
       
       const response = await axios.get(url, {
         headers: token ? { Authorization: `Bearer ${token}` } : {}
@@ -135,8 +136,8 @@ const Publish: React.FC = () => {
 
   const loadUsageStats = async () => {
     try {
-      const response = await axios.get('http://localhost:5001/api/social/usage', {
-        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      const response = await axios.get(api.getUrl('social/usage'), {
+        headers: api.getHeaders(token)
       });
       setUsageStats(response.data.data);
     } catch (error) {
@@ -149,8 +150,8 @@ const Publish: React.FC = () => {
     if (!newProfile.name.trim()) return;
 
     try {
-      await axios.post('http://localhost:5001/api/social/profiles', newProfile, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      await axios.post(api.getUrl('social/profiles'), newProfile, {
+        headers: api.getHeaders(token)
       });
       
       setNewProfile({ name: '', description: '', color: '#4ade80' });
@@ -186,8 +187,8 @@ const Publish: React.FC = () => {
         })
       };
 
-      await axios.post('http://localhost:5001/api/social/posts', postData, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      await axios.post(api.getUrl('social/posts'), postData, {
+        headers: api.getHeaders(token)
       });
 
       alert('Post created successfully!');

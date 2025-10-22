@@ -1,4 +1,5 @@
 // [October 15, 2025] - Talent Profile View Page
+import api from '../services/api';
 // Purpose: Detailed view of a talent's profile, portfolio, and services
 
 import React, { useState, useEffect } from 'react';
@@ -58,7 +59,7 @@ const TalentProfile: React.FC = () => {
   const loadTalentProfile = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`http://localhost:5001/api/talent/profiles/${id}`);
+        const response = await axios.get(api.getUrl(`talent/profiles/${id}`));
       
       if (response.data.success) {
         console.log('Talent profile loaded:', response.data.data);

@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useUser } from '../contexts/UserContext';
 import { useNavigate } from 'react-router-dom';
+import api from '../services/api';
 
 interface TalentProfile {
   id: string;
@@ -79,7 +80,7 @@ const TalentAdmin: React.FC = () => {
 
   const loadPendingTalent = async () => {
     try {
-      const response = await axios.get('http://localhost:5001/api/talent/profiles', {
+      const response = await axios.get(api.getUrl('talent/profiles'), {
         params: { status: 'pending' }
       });
       if (response.data.success) {
@@ -92,7 +93,7 @@ const TalentAdmin: React.FC = () => {
 
   const loadActiveTalent = async () => {
     try {
-      const response = await axios.get('http://localhost:5001/api/talent/profiles', {
+      const response = await axios.get(api.getUrl('talent/profiles'), {
         params: { status: 'active' }
       });
       if (response.data.success) {
@@ -108,8 +109,8 @@ const TalentAdmin: React.FC = () => {
     // For now, calculate from existing data
     try {
       const [talentRes, bookingsRes] = await Promise.all([
-        axios.get('http://localhost:5001/api/talent/profiles'),
-        axios.get('http://localhost:5001/api/talent/bookings', {
+        axios.get(api.getUrl('talent/profiles')),
+        axios.get(api.getUrl('talent/bookings'), {
           headers: { Authorization: `Bearer ${token}` }
         })
       ]);
@@ -142,7 +143,7 @@ const TalentAdmin: React.FC = () => {
   const handleApproveTalent = async (talentId: string) => {
     try {
       const response = await axios.put(
-        `http://localhost:5001/api/talent/profiles/${talentId}/approve`,
+        api.getUrl(`talent/profiles/${talentId}/approve`),
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -162,7 +163,7 @@ const TalentAdmin: React.FC = () => {
 
     try {
       const response = await axios.put(
-        `http://localhost:5001/api/talent/profiles/${talentId}/suspend`,
+        api.getUrl(`talent/profiles/${talentId}/suspend`),
         { reason },
         { headers: { Authorization: `Bearer ${token}` } }
       );

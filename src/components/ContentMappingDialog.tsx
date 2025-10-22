@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useUser } from '../contexts/UserContext';
+import api from '../services/api';
 
 interface ContentItem {
   title: string;
@@ -97,7 +98,7 @@ const ContentMappingDialog: React.FC<ContentMappingDialogProps> = ({
 
   const fetchPostTypes = async () => {
     try {
-      const response = await axios.get(`http://localhost:5001/api/playbook/recipes/${projectId}`);
+      const response = await axios.get(api.getUrl(`playbook/recipes/${projectId}`));
       if (response.data.success) {
         setPostTypes(response.data.data || []);
       }
@@ -138,7 +139,7 @@ const ContentMappingDialog: React.FC<ContentMappingDialogProps> = ({
       const itemsToImport = Array.from(selectedItems).map(index => mappedItems[index]);
       
       const response = await axios.post(
-        `http://localhost:5001/api/content-mapping/${projectId}/import-content`,
+        api.getUrl(`content-mapping/${projectId}/import-content`),
         {
           contentItems: itemsToImport,
           sourceDocument: 'AI Document Review'

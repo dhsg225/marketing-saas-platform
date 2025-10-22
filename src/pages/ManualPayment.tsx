@@ -5,6 +5,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useUser } from '../contexts/UserContext';
+import api from '../services/api';
 import { useParams, useNavigate } from 'react-router-dom';
 
 interface PaymentBreakdown {
@@ -55,7 +56,7 @@ const ManualPayment: React.FC = () => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `http://localhost:5001/api/payments/booking/${bookingId}`,
+        api.getUrl(`payments/booking/${bookingId}`),
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -107,7 +108,7 @@ const ManualPayment: React.FC = () => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        'http://localhost:5001/api/payments/manual',
+        api.getUrl('payments/manual'),
         {
           bookingId,
           amount: parseFloat(amount),

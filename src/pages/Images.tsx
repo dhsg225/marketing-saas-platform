@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useUser } from '../contexts/UserContext';
 import MediaPicker from '../components/MediaPicker';
+import api from '../services/api';
 
 interface ImageAsset {
   id: string;
@@ -109,7 +110,7 @@ const Images: React.FC = () => {
       params.append('page', currentPage.toString());
       params.append('limit', itemsPerPage.toString());
       
-      const response = await fetch(`http://localhost:5001/api/assets?${params.toString()}`);
+        const response = await fetch(api.getUrl(`assets?${params.toString()}`));
       const data = await response.json();
       setAssets(data.data || []);
       setTotalAssets(data.pagination?.total || data.total || data.data?.length || 0);
@@ -175,7 +176,7 @@ const Images: React.FC = () => {
       setUploadStatus('Processing with Sharp...');
       setUploadProgress(30);
       
-      const response = await fetch('http://localhost:5001/api/uploads/process-image', {
+        const response = await fetch(api.getUrl('uploads/process-image'), {
         method: 'POST',
         body: formData
       });
@@ -203,7 +204,7 @@ const Images: React.FC = () => {
         variants: result.data.variants
       };
       
-      await fetch('http://localhost:5001/api/assets', {
+        await fetch(api.getUrl('assets'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(assetData)
@@ -234,7 +235,7 @@ const Images: React.FC = () => {
     if (!window.confirm('Are you sure you want to delete this image?')) return;
     
     try {
-      await fetch(`http://localhost:5001/api/assets/${assetId}`, {
+        await fetch(api.getUrl(`assets/${assetId}`), {
         method: 'DELETE'
       });
       await loadAssets();
@@ -281,7 +282,7 @@ const Images: React.FC = () => {
     
     try {
       const deletePromises = Array.from(selectedAssets).map(assetId =>
-        fetch(`http://localhost:5001/api/assets/${assetId}`, { method: 'DELETE' })
+          fetch(api.getUrl(`assets/${assetId}`), { method: 'DELETE' })
       );
       
       await Promise.all(deletePromises);

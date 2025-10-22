@@ -4,6 +4,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useUser } from '../contexts/UserContext';
+import api from '../services/api';
 
 interface Message {
   id: string;
@@ -47,7 +48,7 @@ const BookingMessages: React.FC<BookingMessagesProps> = ({ bookingId }) => {
   const loadMessages = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:5001/api/talent/bookings/${bookingId}/messages`,
+        api.getUrl(`talent/bookings/${bookingId}/messages`),
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -69,7 +70,7 @@ const BookingMessages: React.FC<BookingMessagesProps> = ({ bookingId }) => {
   const markAsRead = async (messageId: string) => {
     try {
       await axios.put(
-        `http://localhost:5001/api/talent/messages/${messageId}/read`,
+        api.getUrl(`talent/messages/${messageId}/read`),
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -86,7 +87,7 @@ const BookingMessages: React.FC<BookingMessagesProps> = ({ bookingId }) => {
     setLoading(true);
     try {
       const response = await axios.post(
-        `http://localhost:5001/api/talent/bookings/${bookingId}/messages`,
+        api.getUrl(`talent/bookings/${bookingId}/messages`),
         { message_text: newMessage },
         { headers: { Authorization: `Bearer ${token}` } }
       );

@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useUser } from '../contexts/UserContext';
+import api from '../services/api';
 
 interface TalentProfile {
   id: string;
@@ -70,7 +71,7 @@ const BookTalent: React.FC = () => {
 
   const loadTalent = async () => {
     try {
-      const response = await axios.get(`http://localhost:5001/api/talent/profiles/${id}`);
+      const response = await axios.get(api.getUrl(`talent/profiles/${id}`));
       if (response.data.success) {
         const talentData = response.data.data;
         setTalent(talentData);
@@ -89,7 +90,7 @@ const BookTalent: React.FC = () => {
 
   const loadProjects = async () => {
     try {
-      const response = await axios.get('http://localhost:5001/api/playbook/projects', {
+      const response = await axios.get(api.getUrl('playbook/projects'), {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (response.data.success) {
@@ -135,7 +136,7 @@ const BookTalent: React.FC = () => {
     setLoading(true);
     try {
       const response = await axios.post(
-        'http://localhost:5001/api/talent/bookings',
+        api.getUrl('talent/bookings'),
         {
           ...bookingData,
           talent_id: id

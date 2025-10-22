@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { useUser } from '../contexts/UserContext';
+import api from '../services/api';
 import ReportOptionsModal from '../components/ReportOptionsModal';
 
 interface DashboardData {
@@ -46,10 +47,10 @@ const Dashboard: React.FC = () => {
     try {
       setLoading(true);
       const [dashboardResponse, actionsResponse] = await Promise.all([
-        axios.get('http://localhost:5001/api/dashboard/data', {
+        axios.get(api.getUrl('dashboard/data'), {
           headers: token ? { Authorization: `Bearer ${token}` } : {}
         }),
-        axios.get('http://localhost:5001/api/dashboard/quick-actions', {
+        axios.get(api.getUrl('dashboard/quick-actions'), {
           headers: token ? { Authorization: `Bearer ${token}` } : {}
         })
       ]);

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useUser } from '../contexts/UserContext';
+import api from '../services/api';
 
 interface MediaPickerProps {
   isOpen: boolean;
@@ -106,7 +107,7 @@ const MediaPicker: React.FC<MediaPickerProps> = ({ isOpen, onClose, onSelectMedi
 
   const loadAIModels = async () => {
     try {
-      const response = await axios.get('http://localhost:5001/api/ai/models?type=image');
+      const response = await axios.get(api.getUrl('ai/models?type=image'));
       if (response.data.success) {
         setAvailableModels(response.data.models);
         // Set default model to first available
@@ -122,8 +123,8 @@ const MediaPicker: React.FC<MediaPickerProps> = ({ isOpen, onClose, onSelectMedi
   const loadAssets = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('http://localhost:5001/api/assets', {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      const response = await axios.get(api.getUrl('assets'), {
+        headers: api.getHeaders(token),
         params: { limit: 50 }
       });
       setAssets(response.data.assets || []);
@@ -142,7 +143,7 @@ const MediaPicker: React.FC<MediaPickerProps> = ({ isOpen, onClose, onSelectMedi
     try {
       // Step 1: Initiate generation using abstraction layer
       const response = await axios.post(
-        'http://localhost:5001/api/ai/generate',
+        api.getUrl('ai/generate'),
         { 
           modelId: selectedModel,
           prompt: aiPrompt,
@@ -182,8 +183,8 @@ const MediaPicker: React.FC<MediaPickerProps> = ({ isOpen, onClose, onSelectMedi
     const pollInterval = setInterval(async () => {
       try {
         const response = await axios.get(
-          `http://localhost:5001/api/ai/status/${jobId}`,
-          { headers: token ? { Authorization: `Bearer ${token}` } : {} }
+          api.getUrl(`ai/status/${jobId}`),
+          { headers: api.getHeaders(token) }
         );
         
         const { status, progress } = response.data;
@@ -212,8 +213,8 @@ const MediaPicker: React.FC<MediaPickerProps> = ({ isOpen, onClose, onSelectMedi
     try {
       // Step 3: Fetch results
       const response = await axios.get(
-        `http://localhost:5001/api/ai/results/${jobId}`,
-        { headers: token ? { Authorization: `Bearer ${token}` } : {} }
+        api.getUrl(`ai/results/${jobId}`),
+        { headers: api.getHeaders(token) }
       );
       
       if (response.data.success && response.data.assets.length > 0) {
@@ -251,7 +252,7 @@ const MediaPicker: React.FC<MediaPickerProps> = ({ isOpen, onClose, onSelectMedi
           
           try {
             const saveResponse = await axios.post(
-              'http://localhost:5001/api/assets',
+              api.getUrl('assets'),
               assetData,
               { headers: token ? { Authorization: `Bearer ${token}` } : {} }
             );
@@ -313,7 +314,7 @@ const MediaPicker: React.FC<MediaPickerProps> = ({ isOpen, onClose, onSelectMedi
       formData.append('file', selectedFile);
 
       const response = await axios.post(
-        'http://localhost:5001/api/uploads/direct',
+        api.getUrl('uploads/direct'),
         formData,
         {
           headers: {

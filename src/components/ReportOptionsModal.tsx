@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import api from '../services/api';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import axios from 'axios';
 
@@ -53,7 +54,7 @@ const ReportOptionsModal: React.FC<ReportOptionsModalProps> = ({
 
       // Generate the report
       const response = await axios.post(
-        'http://localhost:5001/api/reports/generate-pdf',
+        api.getUrl('reports/generate-pdf'),
         {
           projectId,
           reportOptions: options

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useUser } from '../contexts/UserContext';
+import api from '../services/api';
 import { useSettings } from '../contexts/SettingsContext';
 import AIConfigurationSection from '../components/AIConfigurationSection';
 
@@ -79,7 +80,7 @@ const Settings: React.FC = () => {
   const loadEntities = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:5001/api/management/entities', {
+      const response = await fetch(api.getUrl('management/entities'), {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -124,7 +125,7 @@ const Settings: React.FC = () => {
       setProfileLoading(true);
       console.log('Starting profile load...');
       
-      const response = await fetch('http://localhost:5001/api/auth/verify', {
+      const response = await fetch(api.getUrl('auth/verify'), {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
