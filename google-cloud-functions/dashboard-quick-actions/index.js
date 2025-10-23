@@ -18,21 +18,30 @@ exports.dashboardQuickActions = async (req, res) => {
         title: 'Create New Project',
         description: 'Start a new marketing project',
         icon: 'plus',
-        action: 'create_project'
+        action: 'create_project',
+        link: '/clients',
+        color: 'primary',
+        reason: 'Quick access to create new marketing projects'
       },
       {
         id: '2',
         title: 'Generate Content',
         description: 'Create AI-generated content',
         icon: 'sparkles',
-        action: 'generate_content'
+        action: 'generate_content',
+        link: '/generate',
+        color: 'accent',
+        reason: 'AI-powered content generation'
       },
       {
         id: '3',
         title: 'Schedule Posts',
         description: 'Plan your social media posts',
         icon: 'calendar',
-        action: 'schedule_posts'
+        action: 'schedule_posts',
+        link: '/calendar',
+        color: 'success',
+        reason: 'Calendar view for scheduling content'
       }
     ];
 
