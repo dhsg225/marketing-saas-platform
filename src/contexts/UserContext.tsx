@@ -201,9 +201,12 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         // This prevents unexpected fallback to the first project (e.g., "Big Poppa").
         if (data.data.length > 0) {
           const savedProject = localStorage.getItem('selectedProject');
+          console.log('🔍 DEBUG: Projects loaded, savedProject:', savedProject, 'selectedProject:', selectedProject);
           if (savedProject && data.data.some((p: Project) => p.id === savedProject)) {
+            console.log('🔍 DEBUG: Restoring saved project:', savedProject);
             setSelectedProject(savedProject);
           } else if (!selectedProject) {
+            console.log('🔍 DEBUG: No saved project, selecting first project:', data.data[0].id);
             setSelectedProject(data.data[0].id);
           }
         }
@@ -309,15 +312,15 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
 
   // Wrapper function to save project selection to localStorage
   const handleSetSelectedProject = (projectId: string | null) => {
-    console.log('UserContext: handleSetSelectedProject called with:', projectId);
+    console.log('🔍 DEBUG: handleSetSelectedProject called with:', projectId);
     setSelectedProject(projectId);
     if (projectId) {
       localStorage.setItem('selectedProject', projectId);
-      console.log('UserContext: Saved project to localStorage:', projectId);
-      console.log('UserContext: localStorage now contains:', localStorage.getItem('selectedProject'));
+      console.log('🔍 DEBUG: Saved project to localStorage:', projectId);
+      console.log('🔍 DEBUG: localStorage now contains:', localStorage.getItem('selectedProject'));
     } else {
       localStorage.removeItem('selectedProject');
-      console.log('UserContext: Removed project from localStorage');
+      console.log('🔍 DEBUG: Removed project from localStorage');
     }
   };
 
