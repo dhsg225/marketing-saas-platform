@@ -249,14 +249,14 @@ const Dashboard: React.FC = () => {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-2">
                         <h4 className="text-sm font-semibold text-gray-900">
-                          {activity.action}
+                          {activity.type || activity.action}
                         </h4>
                         <span className="text-xs text-gray-500">
                           {formatTimeAgo(new Date(activity.timestamp))}
                         </span>
                       </div>
                       <p className="text-sm text-gray-700 mb-2">
-                        {activity.description}
+                        {activity.message || activity.description}
                       </p>
                       <div className="flex items-center space-x-4 text-xs text-gray-500">
                         <span className="flex items-center">
