@@ -1,0 +1,9 @@
+{
+  "name": "content-list",
+  "version": "1.0.0",
+  "description": "Google Cloud Function for Content List",
+  "main": "index.js",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.38.0"
+  }
+}

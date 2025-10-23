@@ -34,7 +34,10 @@ export const api = {
           'content': 'content',
           'prompt-refinement': 'api/prompt-refinement',
           'ai/generate-image': 'ai-image-generation',
-          'assets': 'assets'
+          'assets': 'assets',
+          'content-list': 'content-list',
+          'tone-profiles': 'tone-profiles',
+          'playbook/recipes': 'playbook-recipes'
         };
     
     // Check if this is a mapped endpoint

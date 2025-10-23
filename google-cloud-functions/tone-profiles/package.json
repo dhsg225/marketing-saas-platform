@@ -1,0 +1,9 @@
+{
+  "name": "tone-profiles",
+  "version": "1.0.0",
+  "description": "Google Cloud Function for Tone Profiles",
+  "main": "index.js",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.38.0"
+  }
+}
