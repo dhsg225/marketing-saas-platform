@@ -3,6 +3,18 @@
 ## 📝 Recent Activity Log (Newest First)
 <!-- AI: Append here after each significant action with timestamp and 1-2 line summary -->
 
+**October 23, 2025 - 13:35 +07**
+- ✅ **CALENDAR FUNCTIONS FULLY CONFIGURED**: All 4 missing Google Cloud Functions now working with real Supabase data! **Functions Deployed**: `projects`, `content-ideas`, `posts`, `content` - all with correct Supabase environment variables. **Test Results**: ✅ Projects API returns real project data (Matts Place), ✅ Content-ideas API returns real content ideas, ✅ Posts API returns scheduled posts, ✅ Content API returns content history. **Status**: Calendar should now display real content instead of "No Content Found" - all endpoints working! 🗓️✨
+
+**October 23, 2025 - 12:57 +07**
+- 🗓️ **CALENDAR MISSING FUNCTIONS IDENTIFIED & DEPLOYED**: Found the root cause of calendar showing "No Content Found"! **Problem**: Calendar was calling 4 missing Google Cloud Functions: `/projects/{projectId}`, `/content-ideas/project/{projectId}`, `/posts/scheduled/{projectId}`, and `/content/history` - all returning 404 errors. **Solution**: Created and deployed all 4 missing functions with real Supabase data integration. **Status**: Functions deployed but need Supabase environment variables set - calendar should work once env vars are configured! 🗓️✨
+
+**October 23, 2025 - 11:45 +07**
+- 🔍 **DASHBOARD RECENT ACTIVITY ISSUE IDENTIFIED**: Found the root cause of missing recent activity! **Problem**: Dashboard showing "No recent activity" despite user being active for 3 days. **Root Cause**: Dashboard-data function was querying non-existent `content` and `activity_logs` tables instead of the actual `posts` table. **Real Data Found**: ✅ 5 posts created on October 20, 2025 (3 days ago) - "Blind Wine Tasting" posts with different statuses. **Solution**: Updated function to query `posts` table instead of non-existent tables. **Status**: Function updated but still returning empty array - debugging in progress! 🔍✨
+
+**October 23, 2025 - 11:05 +07**
+- 🔧 **PROJECTS API URL MAPPING FIXED**: Fixed projects API URL mapping and deployed missing function! **Problem**: Frontend was calling `clients/projects/client/{clientId}` but API URL mapping was stripping the client ID, and the `clientsProjects` Google Cloud Function didn't exist. **Solution**: Added URL mapping logic for `clients/projects/client/{clientId}` -> `clientsProjects/{clientId}` and deployed the missing function. **Test Results**: ✅ Projects API now returns correct project data (3 projects: Matts Place, Big Poppa x2) for client 0ed735f3-2541-40e4-8f7d-d373e150b9da. **Status**: Projects API URL mapping fixed and function deployed - projects should now load correctly! 🔧✨
+
 **October 23, 2025 - 10:50 +07**
 - 🔧 **CLIENTS API URL MAPPING FIXED**: Fixed API URL mapping to preserve organization ID parameter! **Problem**: Frontend was calling `clients/clients/org` instead of `clients/clients/{organizationId}` because API URL mapping was stripping the organization ID. **Solution**: Updated API URL mapping logic to extract and preserve organization ID from `clients/clients/{orgId}` endpoints. **Correct URL Generation**: Now generates `clientsClients/{orgId}` instead of just `clientsClients`. **Test Results**: ✅ API returns correct client data (Matt client) for organization 550e8400-e29b-41d4-a716-446655440000. **Status**: API URL mapping fixed - clients should now load correctly! 🔧✨
 

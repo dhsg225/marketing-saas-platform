@@ -1,0 +1,12 @@
+{
+  "name": "posts",
+  "version": "1.0.0",
+  "description": "Google Cloud Function for Posts",
+  "main": "index.js",
+  "engines": {
+    "node": "20"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.38.0"
+  }
+}

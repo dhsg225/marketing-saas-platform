@@ -1,0 +1,10 @@
+{
+  "name": "test-logging",
+  "version": "1.0.0",
+  "description": "Test logging function",
+  "main": "index.js",
+  "engines": {
+    "node": "20"
+  },
+  "dependencies": {}
+}
