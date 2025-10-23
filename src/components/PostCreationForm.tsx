@@ -177,7 +177,7 @@ const PostCreationForm: React.FC<PostCreationFormProps> = ({
           projectId={currentProject.id}
           showSavedPrompts={true}
           showRefinementButton={true}
-          onImageGenerated={(imageUrl) => {
+          onImageGenerated={(imageUrl: string) => {
             setFormData(prev => ({
               ...prev,
               full_visual_url: imageUrl,

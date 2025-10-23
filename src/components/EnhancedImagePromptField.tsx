@@ -16,6 +16,7 @@ interface EnhancedImagePromptFieldProps {
   postId?: string;
   contentIdeaId?: string;
   showRefinementButton?: boolean;
+  onImageGenerated?: (imageUrl: string) => void;
 }
 
 const EnhancedImagePromptField: React.FC<EnhancedImagePromptFieldProps> = ({
@@ -29,7 +30,8 @@ const EnhancedImagePromptField: React.FC<EnhancedImagePromptFieldProps> = ({
   disabled = false,
   postId,
   contentIdeaId,
-  showRefinementButton = true
+  showRefinementButton = true,
+  onImageGenerated
 }) => {
   const { token } = useUser();
   const [showRefinementDialog, setShowRefinementDialog] = useState(false);
@@ -58,6 +60,11 @@ const EnhancedImagePromptField: React.FC<EnhancedImagePromptFieldProps> = ({
   const handleImageGenerated = async (imageUrl: string) => {
     setGeneratedImageUrl(imageUrl);
     setIsGeneratingImage(false);
+    
+    // Call the parent component's callback if provided
+    if (onImageGenerated) {
+      onImageGenerated(imageUrl);
+    }
     
     // Optionally save the generated image to the asset library
     if (projectId && token) {

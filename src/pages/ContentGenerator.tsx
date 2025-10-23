@@ -1119,7 +1119,7 @@ const ContentGenerator: React.FC = () => {
                         projectId={currentProject?.id}
                         showSavedPrompts={true}
                         showRefinementButton={true}
-                        onImageGenerated={(imageUrl) => {
+                        onImageGenerated={(imageUrl: string) => {
                           setGeneratedImage(imageUrl);
                           setIsGeneratingImage(false);
                         }}

@@ -160,7 +160,7 @@ const PostCreationFormWithRefinement: React.FC<PostCreationFormWithRefinementPro
           onChange={(value) => handleInputChange('image_prompt', value)}
           label="🎨 AI Image Generation Prompt"
           placeholder="Describe the image you want to generate for this post..."
-          projectId={currentProject.id}
+          projectId={currentProject?.id}
           showSavedPrompts={true}
           showRefinementButton={true}
           onImageGenerated={handleImageGenerated}
