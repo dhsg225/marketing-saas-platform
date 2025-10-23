@@ -204,10 +204,10 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
           console.log('🔍 DEBUG: Projects loaded, savedProject:', savedProject, 'selectedProject:', selectedProject);
           if (savedProject && data.data.some((p: Project) => p.id === savedProject)) {
             console.log('🔍 DEBUG: Restoring saved project:', savedProject);
-            setSelectedProject(savedProject);
+            handleSetSelectedProject(savedProject);
           } else if (!selectedProject) {
             console.log('🔍 DEBUG: No saved project, selecting first project:', data.data[0].id);
-            setSelectedProject(data.data[0].id);
+            handleSetSelectedProject(data.data[0].id);
           }
         }
       }
