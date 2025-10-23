@@ -227,8 +227,8 @@ const Dashboard: React.FC = () => {
 
       {/* Recent Activity - Compact Design */}
       <div className="modern-card hover-lift">
-        <div className="px-6 py-6">
-          <div className="flex items-center justify-between mb-4">
+        <div className="px-4 py-4">
+          <div className="flex items-center justify-between mb-3">
             <h3 className="text-xl font-bold gradient-text">
               📋 Recent Activity
             </h3>
@@ -240,9 +240,9 @@ const Dashboard: React.FC = () => {
           </div>
           
           {dashboardData?.recentActivity && dashboardData.recentActivity.length > 0 ? (
-            <div className="space-y-2">
+            <div className="space-y-1">
               {dashboardData.recentActivity.slice(0, 5).map((activity, index) => (
-                <div key={activity.id} className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-gray-50 transition-colors duration-200">
+                <div key={activity.id} className="flex items-center justify-between py-1 px-3 rounded-lg hover:bg-gray-50 transition-colors duration-200">
                   <div className="flex items-center space-x-3 flex-1 min-w-0">
                     <span className="text-lg flex-shrink-0">
                       {activity.icon}
