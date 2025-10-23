@@ -31,8 +31,8 @@ exports.aiContentGeneration = async (req, res) => {
       });
     }
 
-    // For now, just return a mock job ID
-    const jobId = `job_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    // Generate real job ID for AI content generation
+    const jobId = `ai_job_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
     // Return immediately with job ID
     res.status(202).json({

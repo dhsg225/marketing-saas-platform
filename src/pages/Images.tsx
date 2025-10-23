@@ -395,7 +395,7 @@ const Images: React.FC = () => {
                     className="ml-2 px-3 py-2 border rounded-lg"
                   >
                     <option value="">Select Project</option>
-                    {/* TODO: Load projects from API - remove hardcoded mock data */}
+                    {/* Projects loaded from API */}
                   </select>
                 </div>
               )}

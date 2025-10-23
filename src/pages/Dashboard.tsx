@@ -53,7 +53,7 @@ const Dashboard: React.FC = () => {
       console.log('🔍 DEBUG: Testing API URL mapping...');
       console.log('dashboard/data ->', api.getUrl('dashboard/data'));
       console.log('dashboard/quick-actions ->', api.getUrl('dashboard/quick-actions'));
-      console.log('clients/clients/org-1 ->', api.getUrl('clients/clients/org-1'));
+      console.log('clients/clients/org ->', api.getUrl('clients/clients/org'));
       
       const [dashboardResponse, actionsResponse] = await Promise.all([
         axios.get(api.getUrl('dashboard/data'), {

@@ -20,15 +20,16 @@ export const api = {
     // Remove leading slash if present
     const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
     
-    // Map frontend endpoints to Google Cloud Function names
-    const endpointMapping: Record<string, string> = {
-      'dashboard/data': 'dashboard-data',
-      'dashboard/quick-actions': 'dashboard-quick-actions',
-      'clients/clients': 'clients-clients',
-      'auth': 'auth',
-      'ai-content-generation': 'ai-content-generation',
-      'document-processing': 'document-processing'
-    };
+        // Map frontend endpoints to Google Cloud Function names
+        const endpointMapping: Record<string, string> = {
+          'dashboard/data': 'dashboard-data',
+          'dashboard/quick-actions': 'dashboard-quick-actions',
+          'clients/clients': 'clients-clients',
+          'clients/projects/client': 'clients-projects',
+          'auth': 'auth',
+          'ai-content-generation': 'ai-content-generation',
+          'document-processing': 'document-processing'
+        };
     
     // Check if this is a mapped endpoint
     if (endpointMapping[cleanEndpoint]) {
@@ -37,7 +38,9 @@ export const api = {
     
     // For endpoints with parameters (like clients/clients/org-1), handle them specially
     if (cleanEndpoint.startsWith('clients/clients/')) {
-      return getGoogleCloudUrl('clients-clients');
+      // Extract the organization ID from the endpoint
+      const orgId = cleanEndpoint.split('/')[2]; // clients/clients/{orgId}
+      return getGoogleCloudUrl(`clientsClients/${orgId}`);
     }
     
     return getGoogleCloudUrl(cleanEndpoint);

@@ -136,18 +136,24 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
 
   const loadUserOrganizations = async (tokenToUse: string) => {
     try {
+      console.log('🔍 DEBUG: Loading organizations with token:', tokenToUse?.substring(0, 20) + '...');
       const response = await fetch(api.getUrl('auth/organizations'), {
         headers: api.getHeaders(tokenToUse),
       });
 
+      console.log('🔍 DEBUG: Organizations response status:', response.status);
       if (response.ok) {
         const data = await response.json();
+        console.log('🔍 DEBUG: Organizations data:', data);
         setOrganizations(data.data);
         
         // Auto-select first organization if none selected
         if (data.data.length > 0 && !selectedOrganization) {
+          console.log('🔍 DEBUG: Setting selected organization to:', data.data[0].organization_id);
           setSelectedOrganization(data.data[0].organization_id);
         }
+      } else {
+        console.error('🔍 DEBUG: Organizations response not ok:', response.status, await response.text());
       }
     } catch (error) {
       console.error('Failed to load organizations:', error);
@@ -156,18 +162,24 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
 
   const loadClients = async (organizationId: string, tokenToUse: string) => {
     try {
+      console.log('🔍 DEBUG: Loading clients for organization:', organizationId);
       const response = await fetch(api.getUrl(`clients/clients/${organizationId}`), {
         headers: api.getHeaders(tokenToUse),
       });
 
+      console.log('🔍 DEBUG: Clients response status:', response.status);
       if (response.ok) {
         const data = await response.json();
+        console.log('🔍 DEBUG: Clients data:', data);
         setClients(data.data);
         
         // Auto-select first client if none selected
         if (data.data.length > 0 && !selectedClient) {
+          console.log('🔍 DEBUG: Setting selected client to:', data.data[0].id);
           setSelectedClient(data.data[0].id);
         }
+      } else {
+        console.error('🔍 DEBUG: Clients response not ok:', response.status, await response.text());
       }
     } catch (error) {
       console.error('Failed to load clients:', error);

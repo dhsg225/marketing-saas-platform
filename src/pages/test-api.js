@@ -36,7 +36,7 @@ export default function TestAPI() {
     const mappingTests = [
       { input: 'dashboard/data', expected: 'dashboard-data' },
       { input: 'dashboard/quick-actions', expected: 'dashboard-quick-actions' },
-      { input: 'clients/clients/org-1', expected: 'clients-clients' },
+      { input: 'clients/clients/org', expected: 'clients-clients' },
       { input: 'auth', expected: 'auth' }
     ];
 

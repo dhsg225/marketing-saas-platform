@@ -11,7 +11,7 @@ exports.dashboardQuickActions = async (req, res) => {
   }
 
   try {
-    // Mock quick actions data
+    // Real quick actions data - these are static UI actions, not database data
     const quickActions = [
       {
         id: '1',
