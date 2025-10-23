@@ -26,14 +26,15 @@ exports.dashboardData = async (req, res) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
     console.log('🔍 DEBUG: Starting dashboard data fetch...');
 
-    // Get real data from Supabase - look at content_ideas table where the real data is
+    // Get real data from Supabase - look at multiple tables for comprehensive activity
     const [
       { count: totalContent },
       { count: activeProjects },
       { count: thisMonthContent },
       { count: totalProjects },
       { count: totalClients },
-      { data: recentActivity }
+      { data: contentIdeasActivity },
+      { data: postsActivity }
     ] = await Promise.all([
       // Total content count from content_ideas table (where the real data is)
       supabase.from('content_ideas').select('*', { count: 'exact', head: true }),
@@ -51,16 +52,22 @@ exports.dashboardData = async (req, res) => {
       // Total clients
       supabase.from('clients').select('*', { count: 'exact', head: true }),
       
-      // Recent activity from content_ideas table (where the real data is)
-      supabase.from('content_ideas').select('id, title, status, created_at, updated_at').order('created_at', { ascending: false }).limit(5)
+      // Recent activity from content_ideas table
+      supabase.from('content_ideas').select('id, title, status, created_at, updated_at').order('created_at', { ascending: false }).limit(3),
+      
+      // Recent activity from posts table (more recent activity)
+      supabase.from('posts').select('id, title, status, created_at, updated_at').order('created_at', { ascending: false }).limit(3)
     ]);
 
     // Calculate success rate based on real metrics
     const successRate = totalContent > 0 ? Math.round((totalContent - (totalContent * 0.05)) / totalContent * 100) + '%' : '0%';
 
-    // Format recent activity from content_ideas
-    console.log('🔍 DEBUG: Recent activity data:', recentActivity);
-    const formattedRecentActivity = recentActivity ? recentActivity.map(idea => ({
+    // Format recent activity from both content_ideas and posts
+    console.log('🔍 DEBUG: Content ideas activity:', contentIdeasActivity);
+    console.log('🔍 DEBUG: Posts activity:', postsActivity);
+    
+    // Format content ideas activity
+    const formattedContentIdeas = contentIdeasActivity ? contentIdeasActivity.map(idea => ({
       id: idea.id,
       type: 'content_idea_created',
       message: `Content idea "${idea.title}" created (${idea.status})`,
@@ -68,7 +75,24 @@ exports.dashboardData = async (req, res) => {
       icon: '💡',
       color: idea.status === 'concept_approved' ? 'green' : idea.status === 'draft' ? 'blue' : 'orange'
     })) : [];
-    console.log('🔍 DEBUG: Formatted recent activity:', formattedRecentActivity);
+    
+    // Format posts activity
+    const formattedPosts = postsActivity ? postsActivity.map(post => ({
+      id: post.id,
+      type: 'post_created',
+      message: `Post "${post.title}" created (${post.status})`,
+      timestamp: post.created_at,
+      icon: '📝',
+      color: post.status === 'ready_to_publish' ? 'green' : post.status === 'draft' ? 'blue' : 'orange'
+    })) : [];
+    
+    // Combine and sort all activity by timestamp
+    const allActivity = [...formattedContentIdeas, ...formattedPosts];
+    const formattedRecentActivity = allActivity
+      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+      .slice(0, 5); // Show top 5 most recent activities
+    
+    console.log('🔍 DEBUG: Combined recent activity:', formattedRecentActivity);
 
     const dashboardData = {
       stats: {
