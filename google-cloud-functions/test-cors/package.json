@@ -1,0 +1,7 @@
+{
+  "name": "test-cors",
+  "version": "1.0.0",
+  "description": "Test CORS function",
+  "main": "index.js",
+  "dependencies": {}
+}
