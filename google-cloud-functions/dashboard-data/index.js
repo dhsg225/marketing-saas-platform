@@ -26,7 +26,7 @@ exports.dashboardData = async (req, res) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
     console.log('🔍 DEBUG: Starting dashboard data fetch...');
 
-    // Get real data from Supabase - simplified approach
+    // Get real data from Supabase - look at content_ideas table where the real data is
     const [
       { count: totalContent },
       { count: activeProjects },
@@ -35,14 +35,14 @@ exports.dashboardData = async (req, res) => {
       { count: totalClients },
       { data: recentActivity }
     ] = await Promise.all([
-      // Total content count from posts table
-      supabase.from('posts').select('*', { count: 'exact', head: true }),
+      // Total content count from content_ideas table (where the real data is)
+      supabase.from('content_ideas').select('*', { count: 'exact', head: true }),
       
       // Active projects count
       supabase.from('projects').select('*', { count: 'exact', head: true }).eq('status', 'active'),
       
-      // Content created this month from posts table
-      supabase.from('posts').select('*', { count: 'exact', head: true })
+      // Content created this month from content_ideas table
+      supabase.from('content_ideas').select('*', { count: 'exact', head: true })
         .gte('created_at', new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()),
       
       // Total projects
@@ -51,20 +51,22 @@ exports.dashboardData = async (req, res) => {
       // Total clients
       supabase.from('clients').select('*', { count: 'exact', head: true }),
       
-      // Recent activity from posts table
-      supabase.from('posts').select('id, title, status, created_at, updated_at').order('created_at', { ascending: false }).limit(5)
+      // Recent activity from content_ideas table (where the real data is)
+      supabase.from('content_ideas').select('id, title, status, created_at, updated_at').order('created_at', { ascending: false }).limit(5)
     ]);
 
     // Calculate success rate based on real metrics
     const successRate = totalContent > 0 ? Math.round((totalContent - (totalContent * 0.05)) / totalContent * 100) + '%' : '0%';
 
-    // Format recent activity from posts
+    // Format recent activity from content_ideas
     console.log('🔍 DEBUG: Recent activity data:', recentActivity);
-    const formattedRecentActivity = recentActivity ? recentActivity.map(post => ({
-      id: post.id,
-      type: 'post_created',
-      message: `Post "${post.title}" created (${post.status})`,
-      timestamp: post.created_at
+    const formattedRecentActivity = recentActivity ? recentActivity.map(idea => ({
+      id: idea.id,
+      type: 'content_idea_created',
+      message: `Content idea "${idea.title}" created (${idea.status})`,
+      timestamp: idea.created_at,
+      icon: '💡',
+      color: idea.status === 'concept_approved' ? 'green' : idea.status === 'draft' ? 'blue' : 'orange'
     })) : [];
     console.log('🔍 DEBUG: Formatted recent activity:', formattedRecentActivity);
 
