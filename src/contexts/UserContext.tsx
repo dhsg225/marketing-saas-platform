@@ -114,7 +114,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
 
       if (response.ok) {
         const data = await response.json();
-        setUser(data.data.user);
+        setUser(data.user);
         await loadUserOrganizations(tokenToVerify);
       } else {
         // Token is invalid, remove it

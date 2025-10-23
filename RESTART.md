@@ -3,6 +3,9 @@
 ## 📝 Recent Activity Log (Newest First)
 <!-- AI: Append here after each significant action with timestamp and 1-2 line summary -->
 
+**October 23, 2025 - 14:05 +07**
+- 🔧 **ENHANCED DASHBOARD ACTIVITY TRACKING**: Upgraded dashboard to show comprehensive activity from multiple tables! **Problem**: Dashboard was only showing content ideas from Oct 18, missing recent posts activity from Oct 20. **Solution**: Updated dashboard-data function to track activity from both `content_ideas` AND `posts` tables with proper timestamp sorting. **Test Results**: ✅ Recent Activity now shows "Blind Wine Tasting" posts from Oct 20 (3 days ago) + content ideas from Oct 18, ✅ Mixed activity types: 📝 posts (ready_to_publish, draft) + 💡 content ideas, ✅ Proper color coding and timestamp sorting. **Status**: Dashboard now shows comprehensive 3-day activity span with real recent work! 📊✨
+
 **October 23, 2025 - 13:55 +07**
 - 🔧 **DASHBOARD DATA FIXED**: Fixed dashboard Recent Activity showing "No recent activity" despite user being active for 3 days! **Root Cause**: Dashboard-data function was querying empty `posts` table instead of `content_ideas` table where the real data exists. **Solution**: Updated function to query `content_ideas` table and format activity with proper icons and colors. **Test Results**: ✅ Dashboard now shows 51 content ideas, 3 active projects, 95% success rate, ✅ Recent Activity displays 5 recent content ideas with proper formatting (💡 icons, color-coded by status). **Status**: Dashboard Recent Activity now working with real Supabase data! 📊✨
 
