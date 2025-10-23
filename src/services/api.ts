@@ -28,7 +28,10 @@ export const api = {
           'clients/projects/client': 'clients-projects',
           'auth': 'auth',
           'ai-content-generation': 'ai-content-generation',
-          'document-processing': 'document-processing'
+          'document-processing': 'document-processing',
+          'content-ideas': 'content-ideas',
+          'posts': 'posts',
+          'content': 'content'
         };
     
     // Check if this is a mapped endpoint
