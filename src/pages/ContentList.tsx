@@ -214,8 +214,33 @@ const ContentList: React.FC = () => {
       console.log('ContentList: API response:', response.data);
       
       if (response.data.success) {
-        setContentItems(response.data.data);
-        console.log('ContentList: Set content items:', response.data.data);
+        // Group content items by stage/status
+        const groupedContent: GroupedContent = {
+          ideas: [],
+          concept_approved: [],
+          in_development: [],
+          ready_to_publish: [],
+          published: []
+        };
+        
+        response.data.data.forEach((item: ContentListItem) => {
+          // Map status to stage
+          if (item.status === 'concept_approved') {
+            groupedContent.concept_approved.push(item);
+          } else if (item.status === 'ready_to_publish') {
+            groupedContent.ready_to_publish.push(item);
+          } else if (item.status === 'published') {
+            groupedContent.published.push(item);
+          } else if (item.status === 'in_development') {
+            groupedContent.in_development.push(item);
+          } else {
+            // Default to ideas stage for draft, pending, or unknown status
+            groupedContent.ideas.push(item);
+          }
+        });
+        
+        setContentItems(groupedContent);
+        console.log('ContentList: Set grouped content items:', groupedContent);
       } else {
         console.error('ContentList: API returned success: false', response.data);
         setError(response.data.error || 'Failed to load content items');
