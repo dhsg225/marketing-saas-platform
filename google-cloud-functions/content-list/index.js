@@ -1,7 +1,7 @@
 // Google Cloud Function for Content List - REAL SUPABASE DATA
 const { createClient } = require('@supabase/supabase-js');
 
-exports.contentList = async (req, res) => {
+exports['content-list'] = async (req, res) => {
   // Set CORS headers
   res.set('Access-Control-Allow-Origin', '*');
   res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');

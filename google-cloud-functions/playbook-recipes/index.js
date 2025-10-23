@@ -1,7 +1,7 @@
 // Google Cloud Function for Playbook Recipes - REAL SUPABASE DATA
 const { createClient } = require('@supabase/supabase-js');
 
-exports.playbookRecipes = async (req, res) => {
+exports['playbook-recipes'] = async (req, res) => {
   // Set CORS headers
   res.set('Access-Control-Allow-Origin', '*');
   res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');

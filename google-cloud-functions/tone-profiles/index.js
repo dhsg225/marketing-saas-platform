@@ -1,7 +1,7 @@
 // Google Cloud Function for Tone Profiles - REAL SUPABASE DATA
 const { createClient } = require('@supabase/supabase-js');
 
-exports.toneProfiles = async (req, res) => {
+exports['tone-profiles'] = async (req, res) => {
   // Set CORS headers
   res.set('Access-Control-Allow-Origin', '*');
   res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
