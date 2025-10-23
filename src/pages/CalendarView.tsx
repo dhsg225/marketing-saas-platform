@@ -320,6 +320,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ selectedProject }) => {
 
   // Auto-navigate to month with content when switching to monthly view
   useEffect(() => {
+    console.log('🔍 DEBUG: Auto-navigation check - activeView:', activeView, 'contentIdeas:', contentIdeas.length, 'scheduledPosts:', scheduledPosts.length);
     if (activeView === 'monthly' && (contentIdeas.length > 0 || scheduledPosts.length > 0)) {
       // Count content by month to find the month with the most content
       const monthCounts: { [key: string]: number } = {};
@@ -330,6 +331,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ selectedProject }) => {
           const ideaDate = new Date(idea.suggested_date);
           const monthKey = `${ideaDate.getFullYear()}-${ideaDate.getMonth()}`;
           monthCounts[monthKey] = (monthCounts[monthKey] || 0) + 1;
+          console.log(`🔍 DEBUG: Content idea "${idea.title}" scheduled for ${idea.suggested_date} -> month ${monthKey}`);
         }
       });
       
@@ -339,8 +341,11 @@ const CalendarView: React.FC<CalendarViewProps> = ({ selectedProject }) => {
           const postDate = new Date(post.scheduled_date);
           const monthKey = `${postDate.getFullYear()}-${postDate.getMonth()}`;
           monthCounts[monthKey] = (monthCounts[monthKey] || 0) + 1;
+          console.log(`🔍 DEBUG: Scheduled post "${post.title}" scheduled for ${post.scheduled_date} -> month ${monthKey}`);
         }
       });
+      
+      console.log('🔍 DEBUG: Month counts:', monthCounts);
       
       // Find the month with the most content
       let maxCount = 0;
@@ -356,8 +361,12 @@ const CalendarView: React.FC<CalendarViewProps> = ({ selectedProject }) => {
         const [year, month] = targetMonthKey.split('-').map(Number);
         const targetDate = new Date(year, month, 1);
         setSelectedDate(targetDate);
-        console.log(`CalendarView: Auto-navigating to month with most content (${maxCount} items):`, targetDate.toDateString());
+        console.log(`🔍 DEBUG: Auto-navigating to month with most content (${maxCount} items):`, targetDate.toDateString());
+      } else {
+        console.log('🔍 DEBUG: No target month found for auto-navigation');
       }
+    } else {
+      console.log('🔍 DEBUG: Auto-navigation not triggered - activeView:', activeView, 'contentIdeas:', contentIdeas.length, 'scheduledPosts:', scheduledPosts.length);
     }
   }, [activeView, contentIdeas, scheduledPosts]);
 
