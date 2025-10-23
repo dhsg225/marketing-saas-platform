@@ -5,5 +5,9 @@
   "main": "index.js",
   "engines": {
     "node": "20"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.38.0",
+    "bcrypt": "^5.1.1"
   }
 }

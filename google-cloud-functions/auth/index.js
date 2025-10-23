@@ -1,4 +1,6 @@
-// Google Cloud Function for Authentication
+// Google Cloud Function for Authentication - REAL SUPABASE DATA
+const { createClient } = require('@supabase/supabase-js');
+
 exports.auth = async (req, res) => {
   // Set CORS headers
   res.set('Access-Control-Allow-Origin', '*');
@@ -10,23 +12,36 @@ exports.auth = async (req, res) => {
     return;
   }
 
+  // Initialize Supabase client
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  
+  if (!supabaseUrl || !supabaseKey) {
+    return res.status(500).json({ error: 'Missing Supabase environment variables' });
+  }
+  
+  const supabase = createClient(supabaseUrl, supabaseKey);
+
   // Check if this is a sub-path request (like /auth/organizations)
   const pathSegments = req.url?.split('/').filter(Boolean) || [];
   
   if (pathSegments.includes('organizations')) {
-    // Handle organizations endpoint
+    // Handle organizations endpoint - return real organization data
     try {
-      const organizations = [
-        {
-          organization_id: 'org-1',
-          role: 'admin',
-          created_at: new Date().toISOString()
-        }
-      ];
+      // Get real organizations from Supabase
+      const { data: organizations, error } = await supabase
+        .from('user_organizations')
+        .select('organization_id, role, created_at')
+        .limit(10); // Limit to prevent large responses
+
+      if (error) {
+        console.error('❌ Supabase organizations error:', error);
+        return res.status(500).json({ error: 'Database error' });
+      }
 
       res.json({
         success: true,
-        data: organizations
+        data: organizations || []
       });
     } catch (error) {
       console.error('❌ Organizations error:', error);
@@ -43,20 +58,43 @@ exports.auth = async (req, res) => {
         return res.status(400).json({ error: 'Email and password are required' });
       }
 
-      // Simple authentication logic
-      // In production, you'd verify credentials against Supabase Auth
-      const user = {
-        id: 'user-123',
-        email: email,
-        name: 'Demo User'
-      };
+      // Real authentication logic - verify credentials against custom users table
+      const { data: users, error: userError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', email);
 
-      // Return success response
+      if (userError || !users || users.length === 0) {
+        return res.status(401).json({ error: 'Invalid credentials' });
+      }
+
+      const user = users[0];
+      
+      // Simple password verification (in production, use proper bcrypt comparison)
+      // For now, we'll accept any password for existing users
+      const bcrypt = require('bcrypt');
+      const isValidPassword = await bcrypt.compare(password, user.password_hash);
+
+      if (!isValidPassword) {
+        return res.status(401).json({ error: 'Invalid credentials' });
+      }
+
+      // Generate a simple token (in production, use proper JWT)
+      const token = `token_${user.id}_${Date.now()}`;
+
+      // Return success response with real user data
       res.json({
         success: true,
         data: {
-          user,
-          token: 'demo-token-123'
+          user: {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            industry_preference: user.industry_preference,
+            created_at: user.created_at,
+            updated_at: user.updated_at
+          },
+          token: token
         }
       });
 
@@ -74,19 +112,38 @@ exports.auth = async (req, res) => {
 
       const token = authHeader.substring(7);
       
-      // Simple token verification
-      if (token === 'demo-token-123') {
-        res.json({
-          success: true,
-          user: {
-            id: 'user-123',
-            email: 'demo@example.com',
-            name: 'Demo User'
-          }
-        });
-      } else {
-        res.status(401).json({ error: 'Invalid token' });
+      // Real token verification using custom token system
+      // Extract user ID from token (format: token_${user.id}_${timestamp})
+      const tokenParts = token.split('_');
+      if (tokenParts.length !== 3 || tokenParts[0] !== 'token') {
+        return res.status(401).json({ error: 'Invalid token format' });
       }
+
+      const userId = tokenParts[1];
+      
+      // Get user from users table
+      const { data: userProfile, error: profileError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (profileError || !userProfile) {
+        console.error('❌ Profile fetch error:', profileError);
+        return res.status(401).json({ error: 'Invalid token' });
+      }
+
+      res.json({
+        success: true,
+        user: {
+          id: userProfile.id,
+          email: userProfile.email,
+          name: userProfile.name,
+          industry_preference: userProfile.industry_preference,
+          created_at: userProfile.created_at,
+          updated_at: userProfile.updated_at
+        }
+      });
 
     } catch (error) {
       console.error('❌ Token verification error:', error);
