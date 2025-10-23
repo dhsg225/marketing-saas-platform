@@ -3,6 +3,9 @@
 ## 📝 Recent Activity Log (Newest First)
 <!-- AI: Append here after each significant action with timestamp and 1-2 line summary -->
 
+**October 23, 2025 - 10:50 +07**
+- 🔧 **CLIENTS API URL MAPPING FIXED**: Fixed API URL mapping to preserve organization ID parameter! **Problem**: Frontend was calling `clients/clients/org` instead of `clients/clients/{organizationId}` because API URL mapping was stripping the organization ID. **Solution**: Updated API URL mapping logic to extract and preserve organization ID from `clients/clients/{orgId}` endpoints. **Correct URL Generation**: Now generates `clientsClients/{orgId}` instead of just `clientsClients`. **Test Results**: ✅ API returns correct client data (Matt client) for organization 550e8400-e29b-41d4-a716-446655440000. **Status**: API URL mapping fixed - clients should now load correctly! 🔧✨
+
 **October 23, 2025 - 10:35 +07**
 - 🎯 **ORGANIZATIONS API FIXED**: User-specific organization filtering eliminates duplicates at the source! **Problem**: Organizations API was returning duplicate organization IDs because it was showing organizations for all users instead of just the authenticated user. **Solution**: Updated auth function to extract user ID from token and filter user_organizations by user_id. **User-Specific Data**: Each user now sees only their own organizations, preventing React key errors and frontend conflicts. **Test Results**: ✅ Shannon Green token returns 1 organization, ✅ Test User token returns 1 organization, ✅ No more duplicate keys. **Status**: Organizations API now returns user-specific data, eliminating duplicates at the source! 🎯✨
 

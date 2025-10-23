@@ -43,6 +43,13 @@ export const api = {
       return getGoogleCloudUrl(`clientsClients/${orgId}`);
     }
     
+    // For projects endpoints with parameters (like clients/projects/client/clientId), handle them specially
+    if (cleanEndpoint.startsWith('clients/projects/client/')) {
+      // Extract the client ID from the endpoint
+      const clientId = cleanEndpoint.split('/')[3]; // clients/projects/client/{clientId}
+      return getGoogleCloudUrl(`clientsProjects/${clientId}`);
+    }
+    
     return getGoogleCloudUrl(cleanEndpoint);
   },
   
