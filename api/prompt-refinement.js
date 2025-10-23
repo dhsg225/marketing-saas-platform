@@ -1,6 +1,6 @@
 // Vercel API function for AI-Powered Prompt Refinement
 import { createClient } from '@supabase/supabase-js';
-import OpenAI from 'openai';
+import Anthropic from '@anthropic-ai/sdk';
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -8,9 +8,9 @@ const supabase = createClient(
   process.env.SUPABASE_ANON_KEY
 );
 
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
+// Initialize Claude client
+const claude = new Anthropic({
+  apiKey: process.env.CLAUDE_API_KEY
 });
 
 export default async function handler(req, res) {
@@ -314,7 +314,7 @@ async function handleGetSession(req, res) {
   }
 }
 
-// AI-powered prompt refinement using OpenAI
+// AI-powered prompt refinement using Claude
 async function refinePromptWithAI(originalPrompt, feedback, basePrompt) {
   try {
     const systemPrompt = `You are an expert AI image prompt engineer. Your job is to refine image generation prompts based on client feedback while maintaining the original creative vision.
@@ -336,17 +336,17 @@ CLIENT FEEDBACK: "${feedback}"
 
 Please refine the current prompt to address the client feedback while preserving the original creative vision. Return your response as JSON with "refinedPrompt" and "confidence" fields.`;
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt }
-      ],
+    const message = await claude.messages.create({
+      model: "claude-3-5-sonnet-20241022",
+      max_tokens: 500,
       temperature: 0.7,
-      max_tokens: 500
+      system: systemPrompt,
+      messages: [
+        { role: "user", content: userPrompt }
+      ]
     });
 
-    const response = completion.choices[0].message.content;
+    const response = message.content[0].text;
     
     try {
       const parsed = JSON.parse(response);
@@ -364,7 +364,7 @@ Please refine the current prompt to address the client feedback while preserving
     }
 
   } catch (error) {
-    console.error('❌ AI refinement error:', error);
+    console.error('❌ Claude refinement error:', error);
     return {
       refinedPrompt: originalPrompt,
       confidence: 0.0

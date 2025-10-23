@@ -23,7 +23,7 @@ This guide will help you test the complete AI-powered image prompt refinement sy
 Ensure these are set in your Vercel project:
 - `SUPABASE_URL` - Your Supabase project URL
 - `SUPABASE_ANON_KEY` - Your Supabase anon key
-- `OPENAI_API_KEY` - Your OpenAI API key
+- `CLAUDE_API_KEY` - Your Claude API key (already configured in your system)
 
 ## 🧪 **Test Scenarios**
 
