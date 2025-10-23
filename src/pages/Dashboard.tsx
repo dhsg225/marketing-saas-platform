@@ -42,10 +42,12 @@ const Dashboard: React.FC = () => {
   const [showReportModal, setShowReportModal] = useState(false);
 
   useEffect(() => {
+    console.log('🔍 DEBUG: useEffect triggered, token:', token ? 'present' : 'missing');
     fetchDashboardData();
   }, [token]);
 
   const fetchDashboardData = async () => {
+    console.log('🔍 DEBUG: fetchDashboardData called!');
     try {
       setLoading(true);
       
@@ -64,12 +66,21 @@ const Dashboard: React.FC = () => {
         })
       ]);
 
+      console.log('🔍 DEBUG: Dashboard response:', dashboardResponse.data);
+      console.log('🔍 DEBUG: Actions response:', actionsResponse.data);
+
       if (dashboardResponse.data.success) {
+        console.log('🔍 DEBUG: Setting dashboard data:', dashboardResponse.data.data);
         setDashboardData(dashboardResponse.data.data);
+      } else {
+        console.log('🔍 DEBUG: Dashboard response not successful:', dashboardResponse.data);
       }
       
       if (actionsResponse.data.success) {
+        console.log('🔍 DEBUG: Setting quick actions:', actionsResponse.data.data);
         setQuickActions(actionsResponse.data.data);
+      } else {
+        console.log('🔍 DEBUG: Actions response not successful:', actionsResponse.data);
       }
     } catch (err: any) {
       console.error('Dashboard data fetch error:', err);
