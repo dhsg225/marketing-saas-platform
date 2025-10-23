@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useUser } from '../contexts/UserContext';
+import PromptRefinementModal from './PromptRefinementModal';
 import api from '../services/api';
 
 type Scope = 'project' | 'user' | 'organization';
@@ -16,6 +17,7 @@ interface Asset {
   height?: number;
   storage_path: string;
   created_at: string;
+  image_prompt?: string;
   variants?: {
     [key: string]: {
       url: string;
@@ -54,6 +56,10 @@ const AssetLibrary: React.FC<Props> = ({ projectId, onClose }) => {
     addWatermark: false,
     brandFilter: 'neutral' as 'vibrant' | 'muted' | 'warm' | 'cool' | 'neutral'
   });
+  
+  // Prompt refinement modal state
+  const [showRefinementModal, setShowRefinementModal] = useState(false);
+  const [selectedAssetForRefinement, setSelectedAssetForRefinement] = useState<Asset | null>(null);
 
   const query = useMemo(() => {
     const q = new URLSearchParams();
@@ -87,6 +93,30 @@ const AssetLibrary: React.FC<Props> = ({ projectId, onClose }) => {
   const closeVariantsModal = () => {
     setShowVariantsModal(false);
     setSelectedAsset(null);
+  };
+
+  // Handle prompt refinement
+  const handleRefinePrompt = (asset: Asset) => {
+    setSelectedAssetForRefinement(asset);
+    setShowRefinementModal(true);
+  };
+
+  const handleRefinementClose = () => {
+    setShowRefinementModal(false);
+    setSelectedAssetForRefinement(null);
+  };
+
+  const handleImageGenerated = (imageUrl: string) => {
+    // Update the asset with the new image URL
+    if (selectedAssetForRefinement) {
+      setAssets(prev => 
+        prev.map(asset => 
+          asset.id === selectedAssetForRefinement.id 
+            ? { ...asset, storage_path: imageUrl }
+            : asset
+        )
+      );
+    }
   };
 
   const create = async () => {
@@ -287,14 +317,26 @@ const AssetLibrary: React.FC<Props> = ({ projectId, onClose }) => {
                 <img src={a.storage_path} alt={a.file_name} className="w-full h-28 object-cover rounded" />
                 <div className="text-[10px] text-gray-400 mt-1 flex justify-between">
                   <span>{a.scope}</span>
-                  {a.variants && Object.keys(a.variants).length > 0 && (
-                    <button 
-                      onClick={() => openVariantsModal(a)}
-                      className="text-blue-600 hover:text-blue-800 underline"
-                    >
-                      {Object.keys(a.variants).length} variants
-                    </button>
-                  )}
+                  <div className="flex space-x-1">
+                    {a.variants && Object.keys(a.variants).length > 0 && (
+                      <button 
+                        onClick={() => openVariantsModal(a)}
+                        className="text-blue-600 hover:text-blue-800 underline"
+                      >
+                        {Object.keys(a.variants).length} variants
+                      </button>
+                    )}
+                    {/* Refine Image Prompt - Show if asset has an image prompt */}
+                    {a.image_prompt && (
+                      <button 
+                        onClick={() => handleRefinePrompt(a)}
+                        className="text-purple-600 hover:text-purple-800 underline"
+                        title="Refine Image Prompt"
+                      >
+                        ✨ Refine
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
@@ -547,6 +589,19 @@ const AssetLibrary: React.FC<Props> = ({ projectId, onClose }) => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Prompt Refinement Modal */}
+      {showRefinementModal && selectedAssetForRefinement && (
+        <PromptRefinementModal
+          isOpen={showRefinementModal}
+          onClose={handleRefinementClose}
+          originalPrompt={selectedAssetForRefinement.image_prompt || ''}
+          onImageGenerated={handleImageGenerated}
+          title="Refine Image Prompt"
+          showOriginalImage={!!selectedAssetForRefinement.storage_path}
+          originalImageUrl={selectedAssetForRefinement.storage_path}
+        />
       )}
     </div>
   );

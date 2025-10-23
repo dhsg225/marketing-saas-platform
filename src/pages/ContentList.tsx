@@ -3,6 +3,7 @@ import { useUser } from '../contexts/UserContext';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import ReportOptionsModal from '../components/ReportOptionsModal';
+import PromptRefinementModal from '../components/PromptRefinementModal';
 import api from '../services/api';
 import {
   PlusIcon,
@@ -50,6 +51,9 @@ interface ContentListItem {
   approved_at?: string;
   post_type_name?: string;
   post_type_color?: string;
+  // Image fields
+  image_prompt?: string;
+  full_visual_url?: string;
 }
 
 interface GroupedContent {
@@ -102,6 +106,10 @@ const ContentList: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  
+  // Prompt refinement modal state
+  const [showRefinementModal, setShowRefinementModal] = useState(false);
+  const [selectedItemForRefinement, setSelectedItemForRefinement] = useState<ContentListItem | null>(null);
 
   // Tab configurations
   const tabs = [
@@ -483,6 +491,34 @@ const ContentList: React.FC = () => {
     setSaveSuccess(false);
   };
 
+  // Handle prompt refinement
+  const handleRefinePrompt = (item: ContentListItem) => {
+    setSelectedItemForRefinement(item);
+    setShowRefinementModal(true);
+  };
+
+  const handleRefinementClose = () => {
+    setShowRefinementModal(false);
+    setSelectedItemForRefinement(null);
+  };
+
+  const handleImageGenerated = (imageUrl: string) => {
+    // Update the item with the new image URL
+    if (selectedItemForRefinement) {
+      setContentItems(prev => {
+        const updated = { ...prev };
+        Object.keys(updated).forEach(stage => {
+          updated[stage as keyof GroupedContent] = updated[stage as keyof GroupedContent].map((item: ContentListItem) =>
+            item.id === selectedItemForRefinement.id
+              ? { ...item, full_visual_url: imageUrl }
+              : item
+          );
+        });
+        return updated;
+      });
+    }
+  };
+
   // Render tab content
   const renderTabContent = () => {
     switch (activeTab) {
@@ -726,6 +762,16 @@ const ContentList: React.FC = () => {
                                 <SparklesIcon className="h-4 w-4" />
                                 {/* Glowing effect for approved concepts */}
                                 <div className="absolute inset-0 rounded-full bg-purple-100 opacity-0 group-hover:opacity-50 transition-opacity"></div>
+                              </button>
+                            )}
+                            {/* Refine Image Prompt - Show if item has an image prompt */}
+                            {item.image_prompt && (
+                              <button 
+                                onClick={() => handleRefinePrompt(item)}
+                                className="p-2 text-blue-500 hover:text-blue-700 transition-colors"
+                                title="Refine Image Prompt"
+                              >
+                                <SparklesIcon className="h-4 w-4" />
                               </button>
                             )}
                             <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
@@ -1168,6 +1214,21 @@ const ContentList: React.FC = () => {
               </div>
             </div>
           </div>
+        )}
+
+        {/* Prompt Refinement Modal */}
+        {showRefinementModal && selectedItemForRefinement && (
+          <PromptRefinementModal
+            isOpen={showRefinementModal}
+            onClose={handleRefinementClose}
+            originalPrompt={selectedItemForRefinement.image_prompt || ''}
+            postId={selectedItemForRefinement.id}
+            contentIdeaId={selectedItemForRefinement.id}
+            onImageGenerated={handleImageGenerated}
+            title="Refine Image Prompt"
+            showOriginalImage={!!selectedItemForRefinement.full_visual_url}
+            originalImageUrl={selectedItemForRefinement.full_visual_url}
+          />
         )}
 
       </div>

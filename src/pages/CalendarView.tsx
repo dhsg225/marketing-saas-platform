@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { CalendarIcon, ClockIcon, ChartBarIcon, EyeIcon, PlusIcon, PencilIcon, CheckIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { CalendarIcon, ClockIcon, ChartBarIcon, EyeIcon, PlusIcon, PencilIcon, CheckIcon, XMarkIcon, SparklesIcon } from '@heroicons/react/24/outline';
 import CalendarItem from '../components/CalendarItem';
 import ReportOptionsModal from '../components/ReportOptionsModal';
+import PromptRefinementModal from '../components/PromptRefinementModal';
 import { useUser } from '../contexts/UserContext';
 import api from '../services/api';
 import { 
@@ -27,6 +28,8 @@ interface ContentPiece {
   is_scheduled_post?: boolean;
   scheduled_time?: string;
   platform?: string;
+  image_prompt?: string;
+  full_visual_url?: string;
 }
 
 interface ContentIdea {
@@ -91,6 +94,10 @@ const CalendarView: React.FC<CalendarViewProps> = ({ selectedProject }) => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [editedIdea, setEditedIdea] = useState<ContentIdea | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  
+  // Prompt refinement modal state
+  const [showRefinementModal, setShowRefinementModal] = useState(false);
+  const [selectedItemForRefinement, setSelectedItemForRefinement] = useState<ContentPiece | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
 
   // Date range utility functions now imported from calendarDateUtils
@@ -237,6 +244,30 @@ const CalendarView: React.FC<CalendarViewProps> = ({ selectedProject }) => {
       setIsModalOpen(true);
     } else {
       console.warn('Could not find content idea for item:', item);
+    }
+  };
+
+  // Handle prompt refinement
+  const handleRefinePrompt = (item: ContentPiece) => {
+    setSelectedItemForRefinement(item);
+    setShowRefinementModal(true);
+  };
+
+  const handleRefinementClose = () => {
+    setShowRefinementModal(false);
+    setSelectedItemForRefinement(null);
+  };
+
+  const handleImageGenerated = (imageUrl: string) => {
+    // Update the content data with the new image URL
+    if (selectedItemForRefinement) {
+      setContentData(prev => 
+        prev.map(item => 
+          item.id === selectedItemForRefinement.id 
+            ? { ...item, full_visual_url: imageUrl }
+            : item
+        )
+      );
     }
   };
 
@@ -1168,6 +1199,27 @@ const CalendarView: React.FC<CalendarViewProps> = ({ selectedProject }) => {
                         {item.length && <span>Length: {item.length}</span>}
                       </div>
                     </div>
+                    
+                    {/* Action buttons */}
+                    <div className="flex items-center space-x-2 ml-4">
+                      {/* Refine Image Prompt - Show if item has an image prompt */}
+                      {item.image_prompt && (
+                        <button 
+                          onClick={() => handleRefinePrompt(item)}
+                          className="p-2 text-blue-500 hover:text-blue-700 transition-colors"
+                          title="Refine Image Prompt"
+                        >
+                          <SparklesIcon className="h-4 w-4" />
+                        </button>
+                      )}
+                      <button 
+                        onClick={() => handleContentIdeaClick(item)}
+                        className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                        title="View Details"
+                      >
+                        <EyeIcon className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -1584,6 +1636,21 @@ const CalendarView: React.FC<CalendarViewProps> = ({ selectedProject }) => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Prompt Refinement Modal */}
+      {showRefinementModal && selectedItemForRefinement && (
+        <PromptRefinementModal
+          isOpen={showRefinementModal}
+          onClose={handleRefinementClose}
+          originalPrompt={selectedItemForRefinement.image_prompt || ''}
+          postId={selectedItemForRefinement.id}
+          contentIdeaId={selectedItemForRefinement.id}
+          onImageGenerated={handleImageGenerated}
+          title="Refine Image Prompt"
+          showOriginalImage={!!selectedItemForRefinement.full_visual_url}
+          originalImageUrl={selectedItemForRefinement.full_visual_url}
+        />
       )}
     </div>
   );
