@@ -225,71 +225,59 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Recent Activity - Enhanced with Context */}
+      {/* Recent Activity - Compact Design */}
       <div className="modern-card hover-lift">
-        <div className="px-8 py-8">
-          <h3 className="text-2xl font-bold gradient-text text-center mb-8">
-            📋 Recent Activity
-          </h3>
-          <div className="space-y-4">
-            {dashboardData?.recentActivity && dashboardData.recentActivity.length > 0 ? (
-              dashboardData.recentActivity.map((activity, index) => (
-                <div key={activity.id} className="glass rounded-xl p-6 hover-lift transition-all duration-300">
-                  <div className="flex items-start space-x-4">
-                  <div className="flex-shrink-0">
-                      <div className={`w-12 h-12 rounded-lg flex items-center justify-center text-xl ${
-                        activity.color === 'blue' ? 'bg-blue-100 text-blue-600' :
-                        activity.color === 'green' ? 'bg-green-100 text-green-600' :
-                        activity.color === 'purple' ? 'bg-purple-100 text-purple-600' :
-                        'bg-orange-100 text-orange-600'
-                      }`}>
-                        {activity.icon}
-                      </div>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="text-sm font-semibold text-gray-900">
-                          {activity.type || activity.action}
-                        </h4>
-                        <span className="text-xs text-gray-500">
-                          {formatTimeAgo(new Date(activity.timestamp))}
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-700 mb-2">
-                        {activity.message || activity.description}
-                      </p>
-                      <div className="flex items-center space-x-4 text-xs text-gray-500">
-                        <span className="flex items-center">
-                          <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
-                          {activity.project_name}
-                        </span>
-                        <span className="flex items-center">
-                          <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
-                          {activity.client_name}
-                        </span>
-                        <span className="flex items-center">
-                          <span className="w-2 h-2 bg-purple-500 rounded-full mr-2"></span>
-                          {activity.user_name}
-                        </span>
-                      </div>
-                      {activity.explainer && (
-                        <div className="mt-3 p-3 bg-gray-50 rounded-lg">
-                          <p className="text-xs text-gray-600 italic">
-                            💡 {activity.explainer}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="text-center py-8 text-gray-400">
-                <div className="text-3xl mb-3">📋</div>
-                <p className="text-sm">No recent activity</p>
-              </div>
+        <div className="px-6 py-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xl font-bold gradient-text">
+              📋 Recent Activity
+            </h3>
+            {dashboardData?.recentActivity && dashboardData.recentActivity.length > 5 && (
+              <button className="text-sm text-blue-600 hover:text-blue-800 font-medium">
+                Show More ▼
+              </button>
             )}
           </div>
+          
+          {dashboardData?.recentActivity && dashboardData.recentActivity.length > 0 ? (
+            <div className="space-y-2">
+              {dashboardData.recentActivity.slice(0, 5).map((activity, index) => (
+                <div key={activity.id} className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-gray-50 transition-colors duration-200">
+                  <div className="flex items-center space-x-3 flex-1 min-w-0">
+                    <span className="text-lg flex-shrink-0">
+                      {activity.icon}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-sm font-medium text-gray-900 truncate">
+                          {activity.message || activity.description}
+                        </span>
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                          activity.color === 'green' ? 'bg-green-100 text-green-800' :
+                          activity.color === 'blue' ? 'bg-blue-100 text-blue-800' :
+                          activity.color === 'orange' ? 'bg-orange-100 text-orange-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {activity.color === 'green' ? '✅ Ready' :
+                           activity.color === 'blue' ? '📝 Draft' :
+                           activity.color === 'orange' ? '💡 Approved' :
+                           '📋 Pending'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <span className="text-xs text-gray-500 flex-shrink-0 ml-2">
+                    {formatTimeAgo(new Date(activity.timestamp))}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-6 text-gray-400">
+              <div className="text-2xl mb-2">📋</div>
+              <p className="text-sm">No recent activity</p>
+            </div>
+          )}
         </div>
       </div>
 
