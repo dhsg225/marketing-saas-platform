@@ -28,10 +28,26 @@ exports.auth = async (req, res) => {
   if (pathSegments.includes('organizations')) {
     // Handle organizations endpoint - return real organization data
     try {
-      // Get real organizations from Supabase
+      // Get organizations for the authenticated user only
+      // Extract user ID from token (format: token_${user.id}_${timestamp})
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'No token provided' });
+      }
+
+      const token = authHeader.substring(7);
+      const tokenParts = token.split('_');
+      if (tokenParts.length !== 3 || tokenParts[0] !== 'token') {
+        return res.status(401).json({ error: 'Invalid token format' });
+      }
+
+      const userId = tokenParts[1];
+      
+      // Get organizations for this specific user only
       const { data: organizations, error } = await supabase
         .from('user_organizations')
         .select('organization_id, role, created_at')
+        .eq('user_id', userId)
         .limit(10); // Limit to prevent large responses
 
       if (error) {
