@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useUser } from '../contexts/UserContext';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import ImagePromptField from '../components/ImagePromptField';
+import EnhancedImagePromptField from '../components/EnhancedImagePromptField';
 import RichTextEditor from '../components/RichTextEditor';
 import { CalendarIcon, SparklesIcon, ArrowLeftIcon, DocumentArrowDownIcon, ArrowPathIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 import api from '../services/api';
@@ -1111,14 +1111,18 @@ const ContentGenerator: React.FC = () => {
                           )}
                         </button>
                       </div>
-                      <ImagePromptField
+                      <EnhancedImagePromptField
                         value={imagePrompt}
                         onChange={setImagePrompt}
                         placeholder="E.g., A modern office space with plants and natural lighting, professional photography style..."
                         label=""
                         projectId={currentProject?.id}
                         showSavedPrompts={true}
-                        className=""
+                        showRefinementButton={true}
+                        onImageGenerated={(imageUrl) => {
+                          setGeneratedImage(imageUrl);
+                          setIsGeneratingImage(false);
+                        }}
                       />
                       <p className="text-xs text-gray-500 mt-1">
                         💡 Tip: Enter a basic idea and click "AI Enhance" to get a professional Midjourney-style prompt

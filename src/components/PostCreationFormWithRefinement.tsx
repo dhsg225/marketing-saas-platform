@@ -1,18 +1,15 @@
-// [2025-10-19] - Example Post Creation Form with Image Prompt Integration
-import api from '../services/api';
-// Demonstrates how to use the ImagePromptField component in post creation
-
 import React, { useState } from 'react';
 import { useUser } from '../contexts/UserContext';
 import EnhancedImagePromptField from './EnhancedImagePromptField';
 import axios from 'axios';
+import api from '../services/api';
 
-interface PostCreationFormProps {
+interface PostCreationFormWithRefinementProps {
   onPostCreated?: (post: any) => void;
   onClose?: () => void;
 }
 
-const PostCreationForm: React.FC<PostCreationFormProps> = ({
+const PostCreationFormWithRefinement: React.FC<PostCreationFormWithRefinementProps> = ({
   onPostCreated,
   onClose
 }) => {
@@ -38,11 +35,21 @@ const PostCreationForm: React.FC<PostCreationFormProps> = ({
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
 
   const handleInputChange = (field: string, value: any) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
+    }));
+  };
+
+  const handleImageGenerated = (imageUrl: string) => {
+    setGeneratedImageUrl(imageUrl);
+    setFormData(prev => ({
+      ...prev,
+      full_visual_url: imageUrl,
+      full_visual_alt_text: `AI generated image for: ${formData.title || 'Untitled Post'}`
     }));
   };
 
@@ -55,76 +62,67 @@ const PostCreationForm: React.FC<PostCreationFormProps> = ({
 
     try {
       const response = await axios.post(
-        api.getUrl('posts/create/all-at-once'),
+        api.getUrl('posts'),
         {
           ...formData,
-          project_id: currentProject.id
+          project_id: currentProject.id,
+          // Include the generated image if available
+          ...(generatedImageUrl && {
+            full_visual_url: generatedImageUrl,
+            full_visual_alt_text: `AI generated image for: ${formData.title}`
+          })
         },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       if (response.data.success) {
-        onPostCreated?.(response.data.data);
-        // Reset form
-        setFormData({
-          title: '',
-          description: '',
-          platform: 'instagram',
-          post_type_id: '',
-          priority: 'medium',
-          full_content: '',
-          full_visual_url: '',
-          full_visual_alt_text: '',
-          image_prompt: '',
-          tags: [],
-          hashtags: [],
-          mentions: [],
-          scheduled_date: '',
-          scheduled_time: ''
-        });
-        onClose?.();
+        console.log('✅ Post created successfully:', response.data.data);
+        if (onPostCreated) {
+          onPostCreated(response.data.data);
+        }
+        if (onClose) {
+          onClose();
+        }
+      } else {
+        setError(response.data.error || 'Failed to create post');
       }
     } catch (error: any) {
-      console.error('Failed to create post:', error);
+      console.error('❌ Post creation error:', error);
       setError(error.response?.data?.error || 'Failed to create post');
     } finally {
       setLoading(false);
     }
   };
 
-  if (!currentProject) {
-    return (
-      <div className="p-6 text-center">
-        <p className="text-gray-600">Please select a project to create posts.</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="p-6 max-w-2xl mx-auto">
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">Create New Post</h2>
-      
+    <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-lg">
+      <h2 className="text-2xl font-bold text-gray-900 mb-6">
+        ✨ Create Post with AI Image Refinement
+      </h2>
+
+      {error && (
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-red-800">{error}</p>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Basic Information */}
+        {/* Basic Post Information */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Title *
+              Title
             </label>
             <input
               type="text"
               value={formData.title}
               onChange={(e) => handleInputChange('title', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Enter post title..."
               required
             />
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Platform
@@ -138,23 +136,11 @@ const PostCreationForm: React.FC<PostCreationFormProps> = ({
               <option value="facebook">Facebook</option>
               <option value="twitter">Twitter</option>
               <option value="linkedin">LinkedIn</option>
-              <option value="tiktok">TikTok</option>
             </select>
           </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Description
-          </label>
-          <textarea
-            value={formData.description}
-            onChange={(e) => handleInputChange('description', e.target.value)}
-            rows={3}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-
+        {/* Content */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Content
@@ -168,7 +154,7 @@ const PostCreationForm: React.FC<PostCreationFormProps> = ({
           />
         </div>
 
-        {/* Enhanced Image Prompt Field with AI Refinement */}
+        {/* Enhanced Image Prompt Field with Refinement */}
         <EnhancedImagePromptField
           value={formData.image_prompt}
           onChange={(value) => handleInputChange('image_prompt', value)}
@@ -177,43 +163,42 @@ const PostCreationForm: React.FC<PostCreationFormProps> = ({
           projectId={currentProject.id}
           showSavedPrompts={true}
           showRefinementButton={true}
-          onImageGenerated={(imageUrl) => {
-            setFormData(prev => ({
-              ...prev,
-              full_visual_url: imageUrl,
-              full_visual_alt_text: `AI generated image for: ${formData.title || 'Untitled Post'}`
-            }));
-          }}
+          onImageGenerated={handleImageGenerated}
         />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Generated Image Preview */}
+        {generatedImageUrl && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Visual URL
+              🖼️ Generated Image Preview
             </label>
-            <input
-              type="url"
-              value={formData.full_visual_url}
-              onChange={(e) => handleInputChange('full_visual_url', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="https://example.com/image.jpg"
-            />
+            <div className="relative">
+              <img
+                src={generatedImageUrl}
+                alt="Generated image"
+                className="w-full max-w-md h-48 object-cover rounded-lg border"
+              />
+              <div className="absolute top-2 right-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setGeneratedImageUrl(null);
+                    setFormData(prev => ({
+                      ...prev,
+                      full_visual_url: '',
+                      full_visual_alt_text: ''
+                    }));
+                  }}
+                  className="bg-black bg-opacity-50 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm hover:bg-opacity-70"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
           </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Alt Text
-            </label>
-            <input
-              type="text"
-              value={formData.full_visual_alt_text}
-              onChange={(e) => handleInputChange('full_visual_alt_text', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Describe the image for accessibility"
-            />
-          </div>
-        </div>
+        )}
 
+        {/* Scheduling */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -226,7 +211,7 @@ const PostCreationForm: React.FC<PostCreationFormProps> = ({
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Scheduled Time
@@ -240,18 +225,13 @@ const PostCreationForm: React.FC<PostCreationFormProps> = ({
           </div>
         </div>
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-md p-3">
-            <p className="text-red-800 text-sm">{error}</p>
-          </div>
-        )}
-
-        <div className="flex space-x-4">
+        {/* Action Buttons */}
+        <div className="flex items-center justify-end gap-3 pt-4 border-t">
           {onClose && (
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-4 py-2 text-gray-600 hover:text-gray-800"
             >
               Cancel
             </button>
@@ -259,14 +239,27 @@ const PostCreationForm: React.FC<PostCreationFormProps> = ({
           <button
             type="submit"
             disabled={loading}
-            className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
             {loading ? 'Creating...' : 'Create Post'}
           </button>
         </div>
       </form>
+
+      {/* Feature Benefits */}
+      <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+        <h3 className="font-semibold text-blue-900 mb-2">✨ AI-Powered Image Refinement Benefits</h3>
+        <ul className="text-sm text-blue-800 space-y-1">
+          <li>• <strong>Maintain Original Vision:</strong> Keep the original prompt while iterating based on feedback</li>
+          <li>• <strong>Client Feedback Loop:</strong> Structured way to incorporate client suggestions</li>
+          <li>• <strong>AI Prompt Engineering:</strong> AI suggests improved prompts that address feedback</li>
+          <li>• <strong>Side-by-Side Comparison:</strong> See original vs refined prompts before generating</li>
+          <li>• <strong>Iteration History:</strong> Track all prompt versions and their effectiveness</li>
+          <li>• <strong>One-Click Generation:</strong> Generate images directly from refined prompts</li>
+        </ul>
+      </div>
     </div>
   );
 };
 
-export default PostCreationForm;
+export default PostCreationFormWithRefinement;

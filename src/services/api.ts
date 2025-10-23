@@ -31,12 +31,23 @@ export const api = {
           'document-processing': 'document-processing',
           'content-ideas': 'content-ideas',
           'posts': 'posts',
-          'content': 'content'
+          'content': 'content',
+          'prompt-refinement': 'api/prompt-refinement',
+          'ai/generate-image': 'ai-image-generation',
+          'assets': 'assets'
         };
     
     // Check if this is a mapped endpoint
     if (endpointMapping[cleanEndpoint]) {
-      return getGoogleCloudUrl(endpointMapping[cleanEndpoint]);
+      const mappedEndpoint = endpointMapping[cleanEndpoint];
+      
+      // If it's a Vercel API endpoint, use the current domain
+      if (mappedEndpoint.startsWith('api/')) {
+        return `${window.location.origin}/${mappedEndpoint}`;
+      }
+      
+      // Otherwise use Google Cloud Functions
+      return getGoogleCloudUrl(mappedEndpoint);
     }
     
     // For endpoints with parameters (like clients/clients/org-1), handle them specially
