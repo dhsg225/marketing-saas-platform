@@ -1,521 +1,680 @@
-/**
- * AI Model Settings - Admin UI for Managing Model Configurations
- * 
- * This component allows administrators to:
- * - View all configured AI models
- * - Toggle model availability (is_active)
- * - View usage statistics per model
- * - Manage user API keys (BYOK)
- */
-
+// AI Model Settings - Admin Interface for Managing Eden AI Models
+// [Oct 23, 2025 20:00] - Admin UI for toggling models, viewing usage stats, and configuration
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { useUser } from '../contexts/UserContext';
 import api from '../services/api';
+import axios from 'axios';
 
 interface AIModel {
-  modelId: string;
-  providerName: string;
-  modelType: string;
+  id: string;
+  provider: string;
+  name: string;
+  model_identifier: string;
+  enabled: boolean;
+  display_order: number;
   description: string;
-  apiKeyType: string;
-  estimatedTime: number;
-  costPerGeneration: number;
-  isActive?: boolean;
-  adapterModule?: string;
-  apiEndpoint?: string;
+  estimated_time: number;
+  cost_per_generation: number;
+  supported_resolutions: string[];
+  max_resolution: string;
+  features: string[];
+  documentation_url?: string;
+  requires_api_key: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
-interface GenerationJob {
-  job_id: string;
-  model_id: string;
-  prompt: string;
-  status: string;
-  progress: number;
-  created_at: string;
-  completed_at: string;
+interface UsageStats {
+  id: string;
+  name: string;
+  provider: string;
+  total_generations: number;
+  successful_generations: number;
+  failed_generations: number;
+  avg_generation_time_ms: number;
+  total_cost_usd: number;
+  last_used_at: string | null;
 }
 
 const AIModelSettings: React.FC = () => {
   const { token } = useUser();
   const [models, setModels] = useState<AIModel[]>([]);
-  const [recentJobs, setRecentJobs] = useState<GenerationJob[]>([]);
-  const [userApiKeys, setUserApiKeys] = useState<any[]>([]);
+  const [usageStats, setUsageStats] = useState<UsageStats[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'models' | 'jobs' | 'keys'>('models');
-  const [apiKeyInputs, setApiKeyInputs] = useState<{[key: string]: string}>({});
-  const [savingKeys, setSavingKeys] = useState<{[key: string]: boolean}>({});
+  const [updating, setUpdating] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'models' | 'usage' | 'config'>('models');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState<'all' | 'enabled' | 'disabled'>('all');
+
+  const adminApiUrl = api.getUrl('admin/ai-models');
 
   useEffect(() => {
-    loadData();
-  }, [activeTab]);
+    loadModels();
+    loadUsageStats();
+  }, []);
 
-  const loadData = async () => {
+  const loadModels = async () => {
     setLoading(true);
     try {
-      if (activeTab === 'models') {
-        await loadModels();
-      } else if (activeTab === 'jobs') {
-        await loadRecentJobs();
-      } else if (activeTab === 'keys') {
-        await loadUserApiKeys();
+      const response = await axios.get(adminApiUrl, {
+        headers: api.getHeaders(token)
+      });
+      
+      if (response.data.success) {
+        setModels(response.data.models);
+        console.log('✅ Loaded models:', response.data.models.length);
       }
     } catch (error) {
-      console.error('Failed to load data:', error);
+      console.error('Failed to load models:', error);
+      alert('Failed to load AI models');
     } finally {
       setLoading(false);
     }
   };
 
-  const loadModels = async () => {
+  const loadUsageStats = async () => {
     try {
-        const response = await axios.get(api.getUrl('ai/models?activeOnly=false'));
+      // Query the analytics view from Supabase
+      const response = await axios.get(api.getUrl('admin/ai-models/usage'), {
+        headers: api.getHeaders(token)
+      });
+      
       if (response.data.success) {
-        setModels(response.data.models);
+        setUsageStats(response.data.stats || []);
       }
     } catch (error) {
-      console.error('Failed to load models:', error);
+      console.error('Failed to load usage stats:', error);
+      // Non-critical, continue without stats
     }
   };
 
-  const loadRecentJobs = async () => {
+  const toggleModel = async (modelId: string, currentEnabled: boolean) => {
+    setUpdating(modelId);
     try {
-        const response = await axios.get(api.getUrl('ai/jobs?limit=50'), {
-        headers: token ? { Authorization: `Bearer ${token}` } : {}
-      });
-      if (response.data.success) {
-        setRecentJobs(response.data.jobs);
-      }
-    } catch (error) {
-      console.error('Failed to load jobs:', error);
-    }
-  };
-
-  const loadUserApiKeys = async () => {
-    try {
-        const response = await axios.get(api.getUrl('user-api-keys/keys'), {
-        headers: token ? { Authorization: `Bearer ${token}` } : {}
-      });
-      if (response.data.success) {
-        setUserApiKeys(response.data.data);
-      }
-    } catch (error) {
-      console.error('Failed to load user API keys:', error);
-    }
-  };
-
-  const saveApiKey = async (modelId: string, apiKey: string) => {
-    if (!apiKey.trim()) {
-      alert('Please enter an API key');
-      return;
-    }
-
-    setSavingKeys(prev => ({ ...prev, [modelId]: true }));
-    
-    try {
-        const response = await axios.post(api.getUrl('user-api-keys/keys'), {
-        modelId,
-        apiKey
-      }, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {}
-      });
+      const response = await axios.put(
+        adminApiUrl,
+        {
+          modelId: modelId,
+          updates: { enabled: !currentEnabled }
+        },
+        { headers: api.getHeaders(token) }
+      );
 
       if (response.data.success) {
-        alert('✅ API key saved successfully!');
-        setApiKeyInputs(prev => ({ ...prev, [modelId]: '' }));
-        await loadUserApiKeys(); // Reload to show updated status
+        // Update local state
+        setModels(prev => prev.map(m => 
+          m.id === modelId ? { ...m, enabled: !currentEnabled } : m
+        ));
+        console.log(`✅ Toggled ${modelId} to ${!currentEnabled}`);
       }
     } catch (error: any) {
-      console.error('Failed to save API key:', error);
-      alert(`❌ Failed to save API key: ${error.response?.data?.error || error.message}`);
+      console.error('Failed to toggle model:', error);
+      alert('Failed to update model: ' + (error.response?.data?.error || error.message));
     } finally {
-      setSavingKeys(prev => ({ ...prev, [modelId]: false }));
+      setUpdating(null);
     }
   };
 
-  const deleteApiKey = async (modelId: string) => {
-    if (!window.confirm('Are you sure you want to delete this API key?')) {
-      return;
-    }
-
+  const toggleAll = async (enabled: boolean) => {
+    setLoading(true);
     try {
-      const response = await axios.delete(api.getUrl(`user-api-keys/keys/${modelId}`), {
-        headers: token ? { Authorization: `Bearer ${token}` } : {}
-      });
+      const response = await axios.post(
+        adminApiUrl,
+        {
+          action: 'toggle_all',
+          enabled: enabled
+        },
+        { headers: api.getHeaders(token) }
+      );
 
       if (response.data.success) {
-        alert('✅ API key deleted successfully!');
-        await loadUserApiKeys(); // Reload to show updated status
+        // Reload models to reflect changes
+        await loadModels();
+        console.log(`✅ ${enabled ? 'Enabled' : 'Disabled'} all models`);
       }
     } catch (error: any) {
-      console.error('Failed to delete API key:', error);
-      alert(`❌ Failed to delete API key: ${error.response?.data?.error || error.message}`);
+      console.error('Failed to toggle all:', error);
+      alert('Failed to toggle all models: ' + (error.response?.data?.error || error.message));
+    } finally {
+      setLoading(false);
     }
   };
 
-  const getApiKeyStatus = (modelId: string) => {
-    const userKey = userApiKeys.find(key => key.model_id === modelId);
-    return userKey ? {
-      hasKey: true,
-      is_valid: userKey.is_valid,
-      maskedKey: userKey.maskedKey
-    } : {
-      hasKey: false,
-      is_valid: false,
-      maskedKey: null
-    };
+  const refreshStats = async () => {
+    await loadUsageStats();
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed': return 'bg-green-100 text-green-800';
-      case 'processing': return 'bg-blue-100 text-blue-800';
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'failed': return 'bg-red-100 text-red-800';
-      case 'cancelled': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
+  // Filter models based on search and status
+  const filteredModels = models.filter(model => {
+    const matchesSearch = model.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         model.provider.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = filterStatus === 'all' || 
+                         (filterStatus === 'enabled' && model.enabled) ||
+                         (filterStatus === 'disabled' && !model.enabled);
+    return matchesSearch && matchesStatus;
+  });
 
-  const getModelTypeIcon = (type: string) => {
-    switch (type) {
-      case 'image': return '🖼️';
-      case 'video': return '🎥';
-      case 'text': return '📝';
-      default: return '🤖';
-    }
-  };
+  const enabledCount = models.filter(m => m.enabled).length;
+  const disabledCount = models.filter(m => !m.enabled).length;
+  const totalCost = usageStats.reduce((sum, stat) => sum + (stat.total_cost_usd || 0), 0);
+  const totalGenerations = usageStats.reduce((sum, stat) => sum + (stat.total_generations || 0), 0);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="text-center mb-8">
+        <h1 className="text-4xl font-bold text-gray-900 mb-2">🤖 AI Model Settings</h1>
+        <p className="text-lg text-gray-600 mb-4">
+          Manage AI image generation models and view usage analytics
+        </p>
         
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold gradient-text mb-2">
-            🤖 AI Model Management
-          </h1>
-          <p className="text-gray-600 text-lg">
-            Manage AI providers, view usage, and configure settings
-          </p>
+        {/* Quick Stats */}
+        <div className="flex justify-center space-x-6 mt-6">
+          <div className="bg-green-50 border border-green-200 rounded-lg px-6 py-3">
+            <div className="text-2xl font-bold text-green-600">{enabledCount}</div>
+            <div className="text-sm text-green-800">Enabled</div>
+          </div>
+          <div className="bg-red-50 border border-red-200 rounded-lg px-6 py-3">
+            <div className="text-2xl font-bold text-red-600">{disabledCount}</div>
+            <div className="text-sm text-red-800">Disabled</div>
+          </div>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg px-6 py-3">
+            <div className="text-2xl font-bold text-blue-600">{totalGenerations}</div>
+            <div className="text-sm text-blue-800">Total Generations</div>
+          </div>
+          <div className="bg-purple-50 border border-purple-200 rounded-lg px-6 py-3">
+            <div className="text-2xl font-bold text-purple-600">${totalCost.toFixed(2)}</div>
+            <div className="text-sm text-purple-800">Total Cost</div>
+          </div>
+        </div>
         </div>
 
-        {/* Tabs */}
-        <div className="bg-white rounded-t-xl border-b border-gray-200">
-          <div className="flex space-x-1 p-2">
+      {/* Tab Navigation */}
+      <div className="flex justify-center mb-8">
+        <div className="bg-white rounded-lg shadow-sm p-1 flex space-x-1">
             <button
               onClick={() => setActiveTab('models')}
-              className={`flex-1 px-6 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+            className={`px-6 py-3 rounded-md font-semibold transition-all ${
                 activeTab === 'models'
-                  ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-lg'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
               }`}
             >
-              🤖 AI Models
+            🎨 Models
             </button>
             <button
-              onClick={() => setActiveTab('jobs')}
-              className={`flex-1 px-6 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
-                activeTab === 'jobs'
-                  ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-lg'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-              }`}
-            >
-              📊 Generation History
+            onClick={() => setActiveTab('usage')}
+            className={`px-6 py-3 rounded-md font-semibold transition-all ${
+              activeTab === 'usage'
+                ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+            }`}
+          >
+            📊 Usage Stats
             </button>
             <button
-              onClick={() => setActiveTab('keys')}
-              className={`flex-1 px-6 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
-                activeTab === 'keys'
-                  ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-lg'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-              }`}
-            >
-              🔑 API Keys
+            onClick={() => setActiveTab('config')}
+            className={`px-6 py-3 rounded-md font-semibold transition-all ${
+              activeTab === 'config'
+                ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+            }`}
+          >
+            ⚙️ Configuration
             </button>
           </div>
         </div>
-
-        {/* Tab Content */}
-        <div className="bg-white rounded-b-xl shadow-xl p-6">
           
           {/* Models Tab */}
           {activeTab === 'models' && (
-            <div className="space-y-4">
-              {loading ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
-                </div>
-              ) : models.length === 0 ? (
-                <div className="text-center py-12 text-gray-500">
-                  <p className="text-lg mb-2">🤖 No AI models configured</p>
-                  <p className="text-sm">Run the database migration to load model configurations</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 gap-4">
-                  {models.map((model) => (
-                    <div key={model.modelId} className="border border-gray-200 rounded-xl p-6 hover:border-purple-300 transition-colors">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-start gap-4 flex-1">
-                          <div className="text-3xl">{getModelTypeIcon(model.modelType)}</div>
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                              <h3 className="text-xl font-semibold text-gray-900">{model.providerName}</h3>
-                              <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full font-medium">
-                                {model.modelType}
-                              </span>
-                              {model.apiKeyType === 'user_specific' && (
-                                <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full font-medium">
-                                  BYOK
-                                </span>
-                              )}
-                              {model.apiKeyType === 'global' && (
-                                <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full font-medium">
-                                  Platform Key
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-gray-600 mb-3">{model.description}</p>
-                            <div className="flex items-center gap-6 text-sm text-gray-500">
-                              <span>⏱️ ~{model.estimatedTime}s</span>
-                              <span>💰 ${model.costPerGeneration.toFixed(4)}/gen</span>
-                              <span className="text-xs font-mono bg-gray-100 px-2 py-1 rounded">
-                                {model.modelId}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+        <div className="space-y-6">
+          {/* Controls */}
+          <div className="bg-white rounded-xl p-6 shadow-lg">
+            <div className="flex flex-wrap gap-4 items-center justify-between">
+              <div className="flex gap-4 flex-1">
+                {/* Search */}
+                <input
+                  type="text"
+                  placeholder="Search models..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
+                
+                {/* Filter */}
+                <select
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value as any)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                >
+                  <option value="all">All Models</option>
+                  <option value="enabled">Enabled Only</option>
+                  <option value="disabled">Disabled Only</option>
+                </select>
+              </div>
 
-          {/* Jobs Tab */}
-          {activeTab === 'jobs' && (
-            <div className="space-y-4">
+              {/* Bulk Actions */}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => toggleAll(true)}
+                  disabled={loading}
+                  className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50"
+                >
+                  ✅ Enable All
+                </button>
+                <button
+                  onClick={() => toggleAll(false)}
+                  disabled={loading}
+                  className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50"
+                >
+                  ❌ Disable All
+                </button>
+                <button
+                  onClick={loadModels}
+                  disabled={loading}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50"
+                >
+                  🔄 Refresh
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Models Table */}
+          <div className="bg-white rounded-xl shadow-lg overflow-hidden">
               {loading ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
-                </div>
-              ) : recentJobs.length === 0 ? (
-                <div className="text-center py-12 text-gray-500">
-                  <p className="text-lg mb-2">📊 No generation history yet</p>
-                  <p className="text-sm">Generate your first AI image to see it here</p>
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+                <p className="text-gray-600">Loading models...</p>
                 </div>
               ) : (
-                <div className="space-y-3">
-                  {recentJobs.map((job) => (
-                    <div key={job.job_id} className="border border-gray-200 rounded-lg p-4 hover:border-purple-300 transition-colors">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <span className={`text-xs px-2 py-1 rounded-full font-medium ${getStatusColor(job.status)}`}>
-                              {job.status}
-                            </span>
-                            <span className="text-xs text-gray-500 font-mono">{job.model_id}</span>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Model
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Provider
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Cost
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Time
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Features
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {filteredModels.map((model) => (
+                      <tr 
+                        key={model.id}
+                        className={`transition-colors ${model.enabled ? 'bg-green-50' : 'bg-gray-50'}`}
+                      >
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <button
+                            onClick={() => toggleModel(model.id, model.enabled)}
+                            disabled={updating === model.id}
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 ${
+                              model.enabled ? 'bg-green-500' : 'bg-gray-300'
+                            } ${updating === model.id ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          >
+                            <span
+                              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                model.enabled ? 'translate-x-6' : 'translate-x-1'
+                              }`}
+                            />
+                          </button>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center">
+                            <div>
+                              <div className="text-sm font-medium text-gray-900">
+                                {model.name}
+                              </div>
+                              <div className="text-xs text-gray-500 max-w-md truncate">
+                                {model.description}
+                              </div>
+                            </div>
                           </div>
-                          <p className="text-gray-900 font-medium mb-1 line-clamp-2">{job.prompt}</p>
-                          <div className="flex items-center gap-4 text-xs text-gray-500">
-                            <span>Created: {new Date(job.created_at).toLocaleDateString()}</span>
-                            {job.completed_at && (
-                              <span>Completed: {new Date(job.completed_at).toLocaleDateString()}</span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                            {model.provider}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          ${model.cost_per_generation.toFixed(3)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          ~{model.estimated_time}s
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex flex-wrap gap-1 max-w-xs">
+                            {model.features?.slice(0, 3).map((feature, idx) => (
+                              <span 
+                                key={idx}
+                                className="px-2 py-1 text-xs bg-purple-100 text-purple-700 rounded"
+                              >
+                                {feature}
+                              </span>
+                            ))}
+                            {model.features?.length > 3 && (
+                              <span className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded">
+                                +{model.features.length - 3} more
+                              </span>
                             )}
-                            <span className="text-blue-600">{job.progress}%</span>
                           </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          {model.documentation_url && (
+                            <a
+                              href={model.documentation_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:text-blue-800 underline"
+                            >
+                              Docs
+                            </a>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
+          {/* Model Count Summary */}
+          <div className="bg-white rounded-xl p-6 shadow-lg">
+            <div className="text-sm text-gray-600">
+              Showing {filteredModels.length} of {models.length} models
+              {filterStatus !== 'all' && ` (${filterStatus})`}
                         </div>
                       </div>
-                    </div>
-                  ))}
                 </div>
               )}
-            </div>
-          )}
 
-          {/* API Keys Tab */}
-          {activeTab === 'keys' && (
-            <div className="space-y-6">
-              <div className="p-6 bg-blue-50 border border-blue-200 rounded-xl">
-                <h3 className="text-lg font-semibold text-blue-900 mb-2">
-                  🔑 Bring Your Own Key (BYOK)
-                </h3>
-                <p className="text-blue-800 text-sm mb-4">
-                  For models marked as "BYOK", you can add your own API keys from the provider. 
-                  This gives you direct control and may offer better pricing for high-volume usage.
-                </p>
-                <div className="space-y-4">
-                  {models.filter(m => m.apiKeyType === 'user_specific').map((model) => {
-                    const keyStatus = getApiKeyStatus(model.modelId);
-                    const isSaving = savingKeys[model.modelId] || false;
-                    const currentInput = apiKeyInputs[model.modelId] || '';
+      {/* Usage Stats Tab */}
+      {activeTab === 'usage' && (
+        <div className="space-y-6">
+          {/* Controls */}
+          <div className="bg-white rounded-xl p-6 shadow-lg">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-bold text-gray-900">📊 Usage Statistics</h2>
+              <button
+                onClick={refreshStats}
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+              >
+                🔄 Refresh Stats
+              </button>
+            </div>
+          </div>
+
+          {/* Usage Table */}
+          <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Model
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Total Gens
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Success Rate
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Avg Time
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Total Cost
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Last Used
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {usageStats.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                        <div className="text-6xl mb-4">📊</div>
+                        <p className="text-lg font-medium">No usage data yet</p>
+                        <p className="text-sm">Stats will appear after first image generation</p>
+                      </td>
+                    </tr>
+                  ) : (
+                    usageStats.map((stat) => {
+                      const successRate = stat.total_generations > 0 
+                        ? ((stat.successful_generations / stat.total_generations) * 100).toFixed(1)
+                        : '0.0';
+                      
+                      return (
+                        <tr key={stat.id}>
+                          <td className="px-6 py-4">
+                            <div className="text-sm font-medium text-gray-900">{stat.name}</div>
+                            <div className="text-xs text-gray-500">{stat.provider}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm font-bold text-gray-900">
+                              {stat.total_generations || 0}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {stat.failed_generations > 0 && (
+                                <span className="text-red-600">{stat.failed_generations} failed</span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                              parseFloat(successRate) >= 95 ? 'bg-green-100 text-green-800' :
+                              parseFloat(successRate) >= 80 ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-red-100 text-red-800'
+                            }`}>
+                              {successRate}%
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {stat.avg_generation_time_ms 
+                              ? `${(stat.avg_generation_time_ms / 1000).toFixed(1)}s`
+                              : 'N/A'
+                            }
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            ${(stat.total_cost_usd || 0).toFixed(2)}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-500">
+                            {stat.last_used_at 
+                              ? new Date(stat.last_used_at).toLocaleDateString()
+                              : 'Never'
+                            }
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+                </div>
+                </div>
+
+          {/* Cost Breakdown */}
+          {usageStats.length > 0 && (
+            <div className="bg-white rounded-xl p-6 shadow-lg">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">💰 Cost Breakdown</h3>
+              <div className="space-y-2">
+                {usageStats
+                  .filter(stat => stat.total_cost_usd > 0)
+                  .sort((a, b) => b.total_cost_usd - a.total_cost_usd)
+                  .map(stat => {
+                    const percentage = totalCost > 0 
+                      ? ((stat.total_cost_usd / totalCost) * 100).toFixed(1)
+                      : '0.0';
                     
                     return (
-                      <div key={model.modelId} className="bg-white rounded-lg p-4 border border-blue-200">
-                        <div className="flex items-center justify-between mb-3">
-                          <div>
-                            <h4 className="font-semibold text-gray-900">{model.providerName}</h4>
-                            <p className="text-xs text-gray-600">Requires your personal API key</p>
-                            {keyStatus.hasKey && (
-                              <p className="text-xs text-green-600 mt-1">
-                                ✅ Key saved: {keyStatus.maskedKey}
-                              </p>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full font-medium">
-                              BYOK
+                      <div key={stat.id} className="flex items-center gap-4">
+                        <div className="flex-1">
+                          <div className="flex justify-between mb-1">
+                            <span className="text-sm font-medium text-gray-700">{stat.name}</span>
+                            <span className="text-sm text-gray-600">
+                              ${stat.total_cost_usd.toFixed(2)} ({percentage}%)
                             </span>
-                            {keyStatus.hasKey && (
-                              <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full font-medium">
-                                {keyStatus.is_valid ? 'Valid' : 'Invalid'}
-                              </span>
-                            )}
                           </div>
-                        </div>
-                        
-                        <div className="space-y-3">
-                          <div className="flex gap-2">
-                            <input
-                              type="password"
-                              placeholder={keyStatus.hasKey ? "Enter new API key to update..." : "Enter your API key..."}
-                              value={currentInput}
-                              onChange={(e) => setApiKeyInputs(prev => ({ ...prev, [model.modelId]: e.target.value }))}
-                              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
-                            />
-                            <button
-                              onClick={() => saveApiKey(model.modelId, currentInput)}
-                              disabled={isSaving || !currentInput.trim()}
-                              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              {isSaving ? 'Saving...' : (keyStatus.hasKey ? 'Update Key' : 'Save Key')}
-                            </button>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div
+                              className="bg-gradient-to-r from-purple-500 to-blue-500 h-2 rounded-full"
+                              style={{ width: `${percentage}%` }}
+                            ></div>
                           </div>
-                          
-                          {keyStatus.hasKey && (
-                            <div className="flex gap-2">
-                              <button
-                                onClick={() => deleteApiKey(model.modelId)}
-                                className="px-3 py-1 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm font-medium"
-                              >
-                                🗑️ Delete Key
-                              </button>
-                              <button
-                                onClick={() => {
-                                  // Test API key functionality
-                                  alert('API key test functionality coming soon!');
-                                }}
-                                className="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium"
-                              >
-                                🧪 Test Key
-                              </button>
-                            </div>
-                          )}
                         </div>
                       </div>
                     );
                   })}
-                  
-                  {models.filter(m => m.apiKeyType === 'user_specific').length === 0 && (
-                    <p className="text-gray-500 text-center py-8">
-                      No BYOK models configured. All models use platform-wide keys.
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* Platform Keys Info */}
-              <div className="p-6 bg-purple-50 border border-purple-200 rounded-xl">
-                <h3 className="text-lg font-semibold text-purple-900 mb-2">
-                  🔐 Platform API Keys
-                </h3>
-                <p className="text-purple-800 text-sm mb-4">
-                  The following models use platform-wide API keys configured by administrators.
-                  These are managed through environment variables for security.
-                </p>
-                <div className="space-y-2">
-                  {models.filter(m => m.apiKeyType === 'global').map((model) => (
-                    <div key={model.modelId} className="bg-white rounded-lg p-3 border border-purple-200">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h4 className="font-medium text-gray-900">{model.providerName}</h4>
-                          <p className="text-xs text-gray-600 font-mono">{model.modelId}</p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                          <span className="text-xs text-gray-600">Configured</span>
-                        </div>
-                      </div>
                     </div>
-                  ))}
                 </div>
-              </div>
+              )}
             </div>
           )}
 
-        </div>
+      {/* Configuration Tab */}
+      {activeTab === 'config' && (
+        <div className="space-y-6">
+          <div className="bg-white rounded-xl p-6 shadow-lg">
+            <h2 className="text-xl font-bold text-gray-900 mb-6">⚙️ System Configuration</h2>
+            
+            <div className="space-y-6">
+              {/* Eden AI API Status */}
+              <div className="border-b border-gray-200 pb-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-3">🔑 Eden AI API</h3>
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                          <div>
+                      <p className="text-sm font-medium text-green-800">API Key Configured</p>
+                              <p className="text-xs text-green-600 mt-1">
+                        Environment variable EDENAI_API_KEY is set
+                              </p>
+                    </div>
+                    <span className="text-2xl">✅</span>
+                          </div>
+                          </div>
+                        </div>
+                        
+              {/* Database Status */}
+              <div className="border-b border-gray-200 pb-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-3">🗄️ Database</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <p className="text-sm font-medium text-blue-800">Models Table</p>
+                    <p className="text-2xl font-bold text-blue-600 mt-2">{models.length}</p>
+                    <p className="text-xs text-blue-600 mt-1">Total models</p>
+                  </div>
+                  <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                    <p className="text-sm font-medium text-purple-800">Usage Logs</p>
+                    <p className="text-2xl font-bold text-purple-600 mt-2">{totalGenerations}</p>
+                    <p className="text-xs text-purple-600 mt-1">Logged generations</p>
+                  </div>
+                </div>
+                          </div>
+                          
+              {/* Model Statistics */}
+              <div className="border-b border-gray-200 pb-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-3">📊 Model Statistics</h3>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                    <p className="text-sm font-medium text-gray-700">Total Models</p>
+                    <p className="text-3xl font-bold text-gray-900 mt-2">{models.length}</p>
+                  </div>
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <p className="text-sm font-medium text-green-700">Enabled</p>
+                    <p className="text-3xl font-bold text-green-600 mt-2">{enabledCount}</p>
+                  </div>
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <p className="text-sm font-medium text-red-700">Disabled</p>
+                    <p className="text-3xl font-bold text-red-600 mt-2">{disabledCount}</p>
+                            </div>
+                        </div>
+                      </div>
 
-        {/* Quick Stats */}
-        <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="glass rounded-xl p-6">
-            <div className="text-sm text-gray-600 mb-1">Total AI Models</div>
-            <div className="text-3xl font-bold text-gray-900">{models.length}</div>
-            <div className="text-xs text-gray-500 mt-1">
-              {models.filter(m => m.apiKeyType === 'global').length} platform · {models.filter(m => m.apiKeyType === 'user_specific').length} BYOK
-            </div>
-          </div>
-          
-          <div className="glass rounded-xl p-6">
-            <div className="text-sm text-gray-600 mb-1">Generation Jobs</div>
-            <div className="text-3xl font-bold text-gray-900">{recentJobs.length}</div>
-            <div className="text-xs text-gray-500 mt-1">
-              {recentJobs.filter(j => j.status === 'completed').length} completed
-            </div>
-          </div>
-          
-          <div className="glass rounded-xl p-6">
-            <div className="text-sm text-gray-600 mb-1">Success Rate</div>
-            <div className="text-3xl font-bold text-green-600">
-              {recentJobs.length > 0 
-                ? Math.round((recentJobs.filter(j => j.status === 'completed').length / recentJobs.length) * 100)
-                : 0}%
-            </div>
-            <div className="text-xs text-gray-500 mt-1">
-              Last {recentJobs.length} jobs
+              {/* Cost Information */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800 mb-3">💰 Cost Information</h3>
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm font-medium text-yellow-800">Average Cost per Image</p>
+                      <p className="text-2xl font-bold text-yellow-600 mt-1">
+                        ${(models.reduce((sum, m) => sum + m.cost_per_generation, 0) / models.length).toFixed(3)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-yellow-800">Cost Range</p>
+                      <p className="text-lg font-bold text-yellow-600 mt-1">
+                        ${Math.min(...models.map(m => m.cost_per_generation)).toFixed(3)} - 
+                        ${Math.max(...models.map(m => m.cost_per_generation)).toFixed(3)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-4 text-xs text-yellow-700">
+                    <p>💡 <strong>Tip:</strong> Enable cheaper models (SDXL, Replicate) for drafts, premium models (DALL-E 3, Midjourney) for final assets.</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Documentation Links */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800 mb-3">📚 Documentation</h3>
+                <div className="space-y-2">
+                  <a
+                    href="https://docs.edenai.co/reference/image_generation_create"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block px-4 py-3 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
+                  >
+                      <div className="flex items-center justify-between">
+                        <div>
+                        <p className="text-sm font-medium text-blue-900">Eden AI Documentation</p>
+                        <p className="text-xs text-blue-600">API reference and integration guides</p>
+                        </div>
+                      <span className="text-blue-600">→</span>
+                        </div>
+                  </a>
+                  <a
+                    href="https://app.edenai.run/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block px-4 py-3 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 transition-colors"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-purple-900">Eden AI Dashboard</p>
+                        <p className="text-xs text-purple-600">Monitor API usage and billing</p>
+                      </div>
+                      <span className="text-purple-600">→</span>
+                    </div>
+                  </a>
+                </div>
+              </div>
             </div>
           </div>
         </div>
+      )}
 
-        {/* System Info */}
-        <div className="mt-6 glass rounded-xl p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            📋 System Information
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-            <div>
-              <span className="text-gray-600">Abstraction Layer:</span>
-              <span className="ml-2 font-medium text-green-600">✅ Active</span>
-            </div>
-            <div>
-              <span className="text-gray-600">Registered Adapters:</span>
-              <span className="ml-2 font-medium text-gray-900">ApiframeAdapter, DalleAdapter</span>
-            </div>
-            <div>
-              <span className="text-gray-600">Database:</span>
-              <span className="ml-2 font-medium text-gray-900">PostgreSQL</span>
-            </div>
-            <div>
-              <span className="text-gray-600">API Version:</span>
-              <span className="ml-2 font-medium text-gray-900">v1.0.0</span>
-            </div>
-          </div>
-        </div>
-
-      </div>
     </div>
   );
 };
 
 export default AIModelSettings;
-

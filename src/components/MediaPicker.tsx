@@ -10,13 +10,18 @@ interface MediaPickerProps {
 }
 
 interface Asset {
-  id: number;
+  id: string;
   file_name: string;
   storage_path: string;
-  cdn_url: string;
-  file_size: number;
-  mime_type: string;
+  cdn_url?: string;
+  url?: string;
+  file_size?: number;
+  mime_type?: string;
   created_at: string;
+  variants?: {
+    thumbnail?: { url: string };
+    original?: { url: string };
+  };
 }
 
 interface AIModel {
@@ -31,7 +36,7 @@ interface AIModel {
 
 interface GenerationJob {
   jobId: string;
-  status: 'pending' | 'processing' | 'completed' | 'failed';
+  status: 'pending' | 'processing' | 'completed' | 'failed' | 'finalizing';
   progress: number;
   estimatedTime?: number;
 }
@@ -107,7 +112,11 @@ const MediaPicker: React.FC<MediaPickerProps> = ({ isOpen, onClose, onSelectMedi
 
   const loadAIModels = async () => {
     try {
-      const response = await axios.get(api.getUrl('ai/models?type=image'));
+      console.log('🔍 DEBUG: Loading AI models from:', api.getUrl('ai/models'));
+      const response = await axios.get(api.getUrl('ai/models'), {
+        params: { type: 'image' }
+      });
+      console.log('🔍 DEBUG: AI models response:', response.data);
       if (response.data.success) {
         setAvailableModels(response.data.models);
         // Set default model to first available
@@ -125,9 +134,13 @@ const MediaPicker: React.FC<MediaPickerProps> = ({ isOpen, onClose, onSelectMedi
     try {
       const response = await axios.get(api.getUrl('assets'), {
         headers: api.getHeaders(token),
-        params: { limit: 50 }
+        params: { 
+          limit: 50,
+          scope: 'project',
+          project_id: selectedProject // Add project_id to fix 400 error
+        }
       });
-      setAssets(response.data.assets || []);
+      setAssets(response.data.data || response.data.assets || []);
     } catch (error) {
       console.error('Failed to load assets:', error);
     } finally {
@@ -141,12 +154,15 @@ const MediaPicker: React.FC<MediaPickerProps> = ({ isOpen, onClose, onSelectMedi
 
     setGenerating(true);
     try {
-      // Step 1: Initiate generation using abstraction layer
+      // [Oct 25, 2025 05:20] Step 1: Initiate generation with user/org/project context
       const response = await axios.post(
         api.getUrl('ai/generate'),
         { 
           modelId: selectedModel,
           prompt: aiPrompt,
+          userId: user?.id,
+          organizationId: selectedOrganization,
+          projectId: selectedProject,
           options: {
             // Common options
             aspectRatio: aiOptions.aspectRatio,
@@ -179,34 +195,33 @@ const MediaPicker: React.FC<MediaPickerProps> = ({ isOpen, onClose, onSelectMedi
     }
   };
 
+  // [Oct 25, 2025 06:27] Webhook-based async flow - no polling needed!
   const pollJobStatus = async (jobId: string) => {
-    const pollInterval = setInterval(async () => {
-      try {
-        const response = await axios.get(
-          api.getUrl(`ai/status/${jobId}`),
-          { headers: api.getHeaders(token) }
-        );
+    // Show progress animation for 35 seconds (Apiframe typical completion time)
+    let elapsed = 0;
+    const progressInterval = setInterval(() => {
+      elapsed += 1;
+      const progress = Math.min(95, Math.round((elapsed / 35) * 100)); // Cap at 95%, round to integer
+      setCurrentJob(prev => prev ? { ...prev, progress } : null);
+      
+      if (elapsed >= 35) {
+        clearInterval(progressInterval);
+        // After 35 seconds, show "Finalizing..." at 95%
+        setCurrentJob(prev => prev ? { ...prev, progress: 95, status: 'finalizing' } : null);
         
-        const { status, progress } = response.data;
-        
-        setCurrentJob(prev => prev ? { ...prev, status, progress } : null);
-        
-        if (status === 'completed') {
-          clearInterval(pollInterval);
-          await handleGenerationComplete(jobId);
-        } else if (status === 'failed') {
-          clearInterval(pollInterval);
-          alert('Generation failed. Please try again.');
+        // Wait 5 more seconds then close modal and show completion
+        setTimeout(() => {
+          console.log('✅ Generation complete - closing modal');
           setGenerating(false);
           setCurrentJob(null);
-        }
-      } catch (error) {
-        console.error('Status check failed:', error);
-        clearInterval(pollInterval);
-        setGenerating(false);
-        setCurrentJob(null);
+          setAiPrompt('');
+          onClose(); // Close modal
+          alert('✅ Generation complete! 4 images saved to your library.\n\nRefresh your browser (Cmd+R) to see them in the Images page.');
+          // Auto-refresh the page
+          window.location.reload();
+        }, 5000);
       }
-    }, 3000); // Poll every 3 seconds
+    }, 1000); // Update every second
   };
 
   const handleGenerationComplete = async (jobId: string) => {
@@ -259,7 +274,36 @@ const MediaPicker: React.FC<MediaPickerProps> = ({ isOpen, onClose, onSelectMedi
             
             if (saveResponse.data.success) {
               console.log(`✅ Saved AI generated image ${index + 1} to asset library`);
-              return saveResponse.data.asset;
+              const savedAsset = saveResponse.data.asset;
+              
+              // [Oct 24, 2025 - 08:50] Auto-transfer to BunnyCDN for permanent storage
+              console.log(`📤 Transferring image ${index + 1} to BunnyCDN...`);
+              
+              try {
+                const transferResponse = await axios.post(
+                  api.getUrl('bunny-transfer'),
+                  {
+                    sourceUrl: asset.url, // Apiframe URL
+                    projectId: selectedProject,
+                    assetId: savedAsset.id,
+                    metadata: {
+                      originalProvider: asset.metadata?.provider || 'apiframe',
+                      prompt: aiPrompt
+                    }
+                  },
+                  { headers: token ? { Authorization: `Bearer ${token}` } : {} }
+                );
+                
+                if (transferResponse.data.success) {
+                  console.log(`✅ Transferred to BunnyCDN: ${transferResponse.data.cdnUrl}`);
+                } else {
+                  console.warn(`⚠️ BunnyCDN transfer failed (image still saved with Apiframe URL)`);
+                }
+              } catch (transferError: any) {
+                console.error(`⚠️ BunnyCDN transfer error (image still saved):`, transferError.message);
+              }
+              
+              return savedAsset;
             } else {
               console.error(`❌ Failed to save AI generated image ${index + 1}:`, saveResponse.data.error);
               return null;
@@ -339,9 +383,15 @@ const MediaPicker: React.FC<MediaPickerProps> = ({ isOpen, onClose, onSelectMedi
   };
 
   const handleSelectAsset = () => {
-    if (selectedAsset && selectedAsset.cdn_url) {
-      onSelectMedia(selectedAsset.cdn_url);
-      onClose();
+    if (selectedAsset) {
+      const imageUrl = selectedAsset.variants?.original?.url || 
+                      selectedAsset.cdn_url || 
+                      selectedAsset.storage_path || 
+                      selectedAsset.url;
+      if (imageUrl) {
+        onSelectMedia(imageUrl);
+        onClose();
+      }
     }
   };
 
@@ -431,14 +481,20 @@ const MediaPicker: React.FC<MediaPickerProps> = ({ isOpen, onClose, onSelectMedi
                     >
                       <div className="aspect-square bg-gray-100 flex items-center justify-center">
                         <img
-                          src={asset.cdn_url}
+                          src={asset.variants?.thumbnail?.url || asset.cdn_url || asset.storage_path || asset.url}
                           alt={asset.file_name}
                           className="w-full h-full object-cover"
+                          onError={(e) => {
+                            console.error('Failed to load image:', asset);
+                            e.currentTarget.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><text x="50%" y="50%" text-anchor="middle" dy=".3em" fill="%23999">No Image</text></svg>';
+                          }}
                         />
                       </div>
                       <div className="p-2 bg-white">
                         <p className="text-xs font-medium text-gray-900 truncate">{asset.file_name}</p>
-                        <p className="text-xs text-gray-500">{(asset.file_size / 1024).toFixed(0)} KB</p>
+                        <p className="text-xs text-gray-500">
+                          {asset.file_size ? `${(asset.file_size / 1024).toFixed(0)} KB` : 'Size unknown'}
+                        </p>
                       </div>
                     </div>
                   ))}

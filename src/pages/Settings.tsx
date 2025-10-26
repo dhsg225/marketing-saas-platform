@@ -756,9 +756,9 @@ const Settings: React.FC = () => {
               >
                 <div className="flex items-center justify-between text-white">
                   <div>
-                    <h3 className="text-xl font-semibold mb-2">🤖 AI Model Settings</h3>
+                    <h3 className="text-xl font-semibold mb-2">🤖 Eden AI Model Settings</h3>
                     <p className="text-purple-100">
-                      Manage AI providers, view generation history, and configure API keys
+                      Manage 10 AI providers (DALL-E, Midjourney, SDXL), toggle models, view usage analytics and costs
                     </p>
                   </div>
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

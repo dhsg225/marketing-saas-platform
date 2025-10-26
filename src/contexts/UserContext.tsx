@@ -7,6 +7,15 @@ interface User {
   name: string;
   industry_preference: string;
   created_at: string;
+  // [Oct 24, 2025] - Added onboarding and trial fields
+  email_verified?: boolean;
+  onboarding_completed?: boolean;
+  onboarding_step?: string;
+  company_name?: string;
+  industry?: string;
+  company_size?: string;
+  account_status?: string;
+  trial_ends_at?: string;
 }
 
 interface Organization {

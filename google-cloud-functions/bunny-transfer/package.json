@@ -1,10 +1,14 @@
 {
-  "name": "assets",
+  "name": "bunny-transfer",
   "version": "1.0.0",
-  "description": "Google Cloud Function for Assets",
+  "description": "Transfer images from external URLs to BunnyCDN",
   "main": "index.js",
   "dependencies": {
     "@supabase/supabase-js": "^2.38.0",
     "node-fetch": "^2.7.0"
+  },
+  "engines": {
+    "node": "20"
   }
 }
+

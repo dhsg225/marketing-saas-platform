@@ -31,7 +31,7 @@ exports['content-list'] = async (req, res) => {
       return res.status(400).json({ error: 'Project ID required' });
     }
     
-    const projectId = pathSegments[projectIndex + 1];
+    const projectId = pathSegments[projectIndex + 1].split('?')[0]; // Remove query string
     console.log('🔍 DEBUG: Content List API called for project:', projectId);
 
     // Get content ideas for the project

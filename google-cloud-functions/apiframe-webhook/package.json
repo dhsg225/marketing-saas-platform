@@ -1,0 +1,13 @@
+{
+  "name": "apiframe-webhook",
+  "version": "1.0.0",
+  "main": "index.js",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "node-fetch": "^2.6.7"
+  },
+  "engines": {
+    "node": "20"
+  }
+}
+

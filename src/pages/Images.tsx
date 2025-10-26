@@ -2,11 +2,14 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useUser } from '../contexts/UserContext';
 import MediaPicker from '../components/MediaPicker';
 import api from '../services/api';
+import { supabase } from '../lib/supabase';
 
+// [Oct 25, 2025 15:45] Added cdn_url for BunnyCDN permanent storage
 interface ImageAsset {
   id: string;
   name: string;
   url: string;
+  cdn_url?: string;
   storage_path?: string;
   scope: 'project' | 'user' | 'organization';
   project_id?: string;
@@ -73,7 +76,6 @@ const Images: React.FC = () => {
   
   // Filter states
   const [selectedScope, setSelectedScope] = useState<'project' | 'user' | 'organization'>('project');
-  const [selectedProjectFilter, setSelectedProjectFilter] = useState<string>('');
   
   // Variants modal states
   const [showVariantsModal, setShowVariantsModal] = useState(false);
@@ -95,31 +97,44 @@ const Images: React.FC = () => {
   const loadAssets = useCallback(async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({ scope: selectedScope });
-      if (selectedScope === 'project' && selectedProjectFilter) {
-        params.append('project_id', selectedProjectFilter);
-      }
-      if (selectedScope === 'organization' && selectedOrganization) {
-        params.append('organization_id', selectedOrganization);
-      }
-      if (selectedScope === 'user' && user) {
-        params.append('owner_user_id', user.id);
+      // [Oct 24, 2025 - 08:30] Direct Supabase query - bypass failing GCF
+      console.log('🔍 DEBUG: Querying Supabase directly for assets...');
+      console.log('🔍 DEBUG: selectedProject =', selectedProject);
+      
+      let query = supabase
+        .from('assets')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(100);
+      
+      // Filter by project if selected
+      if (selectedProject) {
+        query = query.eq('project_id', selectedProject);
+        console.log('🔍 DEBUG: Filtering by project_id:', selectedProject);
       }
       
-      // Add pagination parameters
-      params.append('page', currentPage.toString());
-      params.append('limit', itemsPerPage.toString());
+      const { data: assetsData, error } = await query;
       
-        const response = await fetch(api.getUrl(`assets?${params.toString()}`));
-      const data = await response.json();
-      setAssets(data.data || []);
-      setTotalAssets(data.pagination?.total || data.total || data.data?.length || 0);
+      if (error) {
+        console.error('❌ Supabase error:', error);
+        setAssets([]);
+        setTotalAssets(0);
+      } else {
+        console.log(`✅ Found ${assetsData?.length || 0} assets directly from Supabase`);
+        if (assetsData && assetsData.length > 0) {
+          console.log('📸 Sample asset:', assetsData[0]);
+        }
+        setAssets(assetsData || []);
+        setTotalAssets(assetsData?.length || 0);
+      }
     } catch (error) {
       console.error('Failed to load assets:', error);
+      setAssets([]);
+      setTotalAssets(0);
     } finally {
       setLoading(false);
     }
-  }, [selectedScope, selectedProjectFilter, selectedOrganization, user, currentPage, itemsPerPage]);
+  }, [selectedScope, selectedProject, selectedOrganization, user, currentPage, itemsPerPage]);
 
   useEffect(() => {
     loadAssets();
@@ -159,8 +174,8 @@ const Images: React.FC = () => {
       formData.append('addWatermark', processingOptions.addWatermark.toString());
       formData.append('brandFilter', processingOptions.brandFilter);
       
-      if (selectedScope === 'project' && selectedProjectFilter) {
-        formData.append('project_id', selectedProjectFilter);
+      if (selectedScope === 'project' && selectedProject) {
+        formData.append('project_id', selectedProject);
       }
       if (selectedScope === 'organization' && selectedOrganization) {
         formData.append('organization_id', selectedOrganization);
@@ -198,7 +213,7 @@ const Images: React.FC = () => {
         file_name: finalFileName, // Database expects file_name, not name
         storage_path: originalUrl, // Required field for database
         scope: selectedScope,
-        project_id: selectedScope === 'project' ? selectedProjectFilter : null,
+        project_id: selectedScope === 'project' ? selectedProject : null,
         organization_id: selectedScope === 'organization' ? selectedOrganization : null,
         owner_user_id: selectedScope === 'user' ? user?.id : null,
         variants: result.data.variants
@@ -301,7 +316,9 @@ const Images: React.FC = () => {
     const selectedAssetsData = assets.filter(asset => selectedAssets.has(asset.id));
     selectedAssetsData.forEach(asset => {
       // Download original or first available variant
-      const downloadUrl = asset.variants?.original?.url || asset.variants?.large?.url || asset.storage_path || asset.url;
+      // [Oct 25, 2025 15:30] Prioritize BunnyCDN URLs over legacy Apiframe URLs in variants
+      const downloadUrl = asset.cdn_url || asset.url || asset.variants?.original?.url || asset.variants?.large?.url || asset.storage_path;
+      if (!downloadUrl) return; // Skip if no URL available
       const link = document.createElement('a');
       link.href = downloadUrl;
       link.download = `${asset.name}.jpg`;
@@ -390,12 +407,15 @@ const Images: React.FC = () => {
                 <div>
                   <label className="text-sm font-semibold text-gray-700">Project:</label>
                   <select
-                    value={selectedProjectFilter}
-                    onChange={(e) => setSelectedProjectFilter(e.target.value)}
+                    value={selectedProject || ''}
+                    onChange={(e) => {
+                      // This would need to be handled by the UserContext
+                      console.log('Project selection changed:', e.target.value);
+                    }}
                     className="ml-2 px-3 py-2 border rounded-lg"
+                    disabled
                   >
-                    <option value="">Select Project</option>
-                    {/* Projects loaded from API */}
+                    <option value={selectedProject || ''}>{currentProject?.name || 'No Project Selected'}</option>
                   </select>
                 </div>
               )}
@@ -495,7 +515,7 @@ const Images: React.FC = () => {
                       />
                     ) : (
                       <img
-                        src={asset.variants?.original?.url || asset.storage_path || asset.url}
+                        src={asset.cdn_url || asset.url || asset.variants?.original?.url || asset.storage_path}
                         alt={asset.name}
                         className="w-full h-full object-cover"
                       />
@@ -955,7 +975,7 @@ const Images: React.FC = () => {
             
             {/* Image */}
             <img
-              src={lightboxImage.variants?.original?.url || lightboxImage.variants?.large?.url || lightboxImage.storage_path || lightboxImage.url}
+              src={lightboxImage.cdn_url || lightboxImage.url || lightboxImage.variants?.original?.url || lightboxImage.variants?.large?.url || lightboxImage.storage_path}
               alt={lightboxImage.name}
               className="max-w-full max-h-full object-contain"
             />

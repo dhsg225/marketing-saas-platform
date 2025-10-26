@@ -1,0 +1,9 @@
+{
+  "name": "ai-models",
+  "version": "1.0.0",
+  "description": "Google Cloud Function for AI Models",
+  "main": "index.js",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0"
+  }
+}

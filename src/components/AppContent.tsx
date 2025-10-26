@@ -129,6 +129,11 @@ const AppContent: React.FC = () => {
               <AIModelSettings />
             </ProtectedRoute>
           } />
+          <Route path="/settings/eden-ai" element={
+            <ProtectedRoute>
+              <AIModelSettings />
+            </ProtectedRoute>
+          } />
           <Route path="/tone-profiler" element={
             <ProtectedRoute>
               <ToneProfiler />

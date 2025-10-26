@@ -20,6 +20,20 @@ export const api = {
     // Remove leading slash if present
     const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
     
+    // Remove query parameters from endpoint (they should be passed separately)
+    const endpointWithoutQuery = cleanEndpoint.split('?')[0];
+    
+    // [Oct 25, 2025 - 02:22] Special handling for ai/status/:id and ai/results/:id
+    // Call GCF base URL directly - it doesn't support sub-paths, use query param instead
+    if (endpointWithoutQuery.startsWith('ai/status/')) {
+      const jobId = endpointWithoutQuery.replace('ai/status/', '');
+      return `${GOOGLE_CLOUD_BASE_URL}/ai-generate-edenai?endpoint=status&jobId=${jobId}`;
+    }
+    if (endpointWithoutQuery.startsWith('ai/results/')) {
+      const jobId = endpointWithoutQuery.replace('ai/results/', '');
+      return `${GOOGLE_CLOUD_BASE_URL}/ai-generate-edenai?endpoint=results&jobId=${jobId}`;
+    }
+    
         // Map frontend endpoints to Google Cloud Function names
         const endpointMapping: Record<string, string> = {
           'dashboard/data': 'dashboard-data',
@@ -34,15 +48,21 @@ export const api = {
           'content': 'content',
           'prompt-refinement': 'api/prompt-refinement',
           'ai/generate-image': 'ai-image-generation',
+          'ai/generate': 'ai-generate-edenai',
+          'ai/models': 'ai-models',
+          'ai/status': 'ai-generate-edenai',
+          'ai/results': 'ai-generate-edenai',
+          'admin/ai-models': 'ai-models-admin',
           'assets': 'assets',
+          'bunny-transfer': 'bunny-transfer',
           'content-list': 'content-list',
           'tone-profiles': 'tone-profiles',
           'playbook/recipes': 'playbook-recipes'
         };
     
     // Check if this is a mapped endpoint
-    if (endpointMapping[cleanEndpoint]) {
-      const mappedEndpoint = endpointMapping[cleanEndpoint];
+    if (endpointMapping[endpointWithoutQuery]) {
+      const mappedEndpoint = endpointMapping[endpointWithoutQuery];
       
       // If it's a Vercel API endpoint, use the current domain
       if (mappedEndpoint.startsWith('api/')) {
@@ -54,20 +74,20 @@ export const api = {
     }
     
     // For endpoints with parameters (like clients/clients/org-1), handle them specially
-    if (cleanEndpoint.startsWith('clients/clients/')) {
+    if (endpointWithoutQuery.startsWith('clients/clients/')) {
       // Extract the organization ID from the endpoint
-      const orgId = cleanEndpoint.split('/')[2]; // clients/clients/{orgId}
+      const orgId = endpointWithoutQuery.split('/')[2]; // clients/clients/{orgId}
       return getGoogleCloudUrl(`clientsClients/${orgId}`);
     }
     
     // For projects endpoints with parameters (like clients/projects/client/clientId), handle them specially
-    if (cleanEndpoint.startsWith('clients/projects/client/')) {
+    if (endpointWithoutQuery.startsWith('clients/projects/client/')) {
       // Extract the client ID from the endpoint
-      const clientId = cleanEndpoint.split('/')[3]; // clients/projects/client/{clientId}
+      const clientId = endpointWithoutQuery.split('/')[3]; // clients/projects/client/{clientId}
       return getGoogleCloudUrl(`clientsProjects/${clientId}`);
     }
     
-    return getGoogleCloudUrl(cleanEndpoint);
+    return getGoogleCloudUrl(endpointWithoutQuery);
   },
   
   // Google Cloud Functions URLs

@@ -1,0 +1,10 @@
+{
+  "name": "auth-verify-email",
+  "version": "1.0.0",
+  "description": "Google Cloud Function for Email Verification",
+  "main": "index.js",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0"
+  }
+}
+
